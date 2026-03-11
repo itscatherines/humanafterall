@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUMANAFTERALL.EXE — AI Loneliness Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&family=Playfair+Display:ital@1&family=Inter:wght@300;400;600;700&family=DM+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black: #080608;
+  --deep: #0e080d;
+  --panel: #130b11;
+  --border: #2d1025;
+  --pink: #ff5599;
+  --pink-light: #ff88bb;
+  --pink-dim: #7a1540;
+  --pink-glow: rgba(255,85,153,0.15);
+  --red: #c80000;
+  --red-bright: #ff4444;
+  --red-light: #ff7070;
+  --white: #f8eef4;
+  --muted: #6b4460;
+  --text: #d8b0c8;
+  --teal: #c8bfc4;
+  --teal-dim: #2a2028;
+  --blue: #9a8fa0;
+  --blue-dim: #1e1820;
+}
+html, body { height:100%; background:var(--black); color:var(--text); font-family:'Syne',sans-serif; overflow:hidden; }
+body::before { content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); }
+
+/* HEADER */
+header { display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--deep);position:relative;flex-shrink:0;height:36px; }
+header::after { content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--pink),transparent);opacity:.4; }
+.logo { font-size:.78rem;font-weight:800;letter-spacing:2.5px;color:var(--white); }
+.logo span { color:var(--pink); }
+.header-tag { font-family:'Syne Mono',monospace;font-size:.58rem;letter-spacing:2px;color:var(--teal); }
+.live-dot { width:6px;height:6px;border-radius:50%;background:var(--red-bright);display:inline-block;animation:blink 1.2s infinite;margin-right:5px; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.1} }
+.fs-btn { background:none;border:1px solid var(--border);color:var(--muted);font-family:'Syne Mono',monospace;font-size:.54rem;letter-spacing:2px;padding:4px 9px;cursor:pointer;border-radius:2px;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap; }
+.fs-btn:hover { border-color:var(--pink);color:var(--pink);box-shadow:0 0 8px var(--pink-glow); }
+
+/* LAYOUT */
+.layout { display:grid;grid-template-columns:162px 1fr 210px;height:calc(100vh - 36px - 70px - 20px);overflow:hidden; }
+
+/* SIDE PANELS */
+.side-panel { background:var(--deep);display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--border); }
+.side-panel.right { border-right:none;border-left:1px solid var(--border); }
+.side-panel::-webkit-scrollbar { width:2px; }
+.side-panel::-webkit-scrollbar-thumb { background:var(--pink-dim); }
+.sect-title { font-family:'Syne Mono',monospace;font-size:.44rem;letter-spacing:2.5px;color:var(--teal);padding:4px 8px 2px;text-transform:uppercase;border-bottom:1px solid var(--border); }
+.stat-card { padding:4px 8px;border-bottom:1px solid var(--border);transition:background .2s; }
+.stat-card:hover { background:#180a14; }
+.stat-label { font-family:'Syne Mono',monospace;font-size:.43rem;letter-spacing:.5px;color:var(--blue);margin-bottom:1px;text-transform:uppercase; }
+.stat-value { font-size:.78rem;font-weight:800;line-height:1;color:var(--pink-light); }
+.stat-value.red { color:var(--red-light); }
+.stat-value.white { color:var(--white); }
+.stat-value.dim { color:#c07090; }
+.stat-sub { font-family:'Syne Mono',monospace;font-size:.38rem;color:var(--muted);margin-top:1px; }
+.mini-bar-track { height:2px;background:var(--border);border-radius:1px;margin-top:3px;overflow:hidden; }
+.mini-bar-fill { height:100%;border-radius:1px; }
+.pink-fill { background:var(--pink); }
+.red-fill { background:var(--red-bright); }
+.white-fill { background:var(--white); }
+.emotion-row { display:flex;flex-wrap:wrap;gap:2px;padding:4px 8px;border-bottom:1px solid var(--border); }
+.chip { font-family:'Syne Mono',monospace;font-size:.42rem;padding:1px 4px;border-radius:2px;letter-spacing:.5px;border:1px solid; }
+.chip.pink  { border-color:var(--pink);color:var(--pink-light);background:var(--pink-glow); }
+.chip.red   { border-color:var(--red-bright);color:var(--red-light);background:rgba(200,0,0,.1); }
+.chip.white { border-color:var(--muted);color:var(--text);background:transparent; }
+.erp-inline { padding:5px 8px;border-bottom:1px solid var(--border);font-family:'Syne Mono',monospace;font-size:.46rem;letter-spacing:.5px;line-height:1.8;text-transform:uppercase; }
+.erp-comma { color:var(--muted); }
+.app-row { display:flex;align-items:center;justify-content:space-between;padding:3px 8px;border-bottom:1px solid var(--border);font-size:.5rem; }
+.app-name { color:var(--white);font-weight:700;font-size:.52rem; }
+.app-dl { font-family:'Syne Mono',monospace;font-size:.44rem;color:var(--pink-light); }
+.app-bar { flex:1;margin:0 5px; }
+.side-panel.right .stat-value { font-size:.7rem; }
+.side-panel.right .stat-card { padding:3px 8px; }
+.side-panel.right .stat-label { font-size:.38rem; }
+.side-panel.right .stat-sub { font-size:.36rem; }
+.side-panel.right .sect-title { font-size:.4rem;padding:4px 8px 2px; }
+
+/* CENTER */
+.center-panel { display:flex;flex-direction:column;background:var(--black);overflow:hidden;min-width:0; }
+
+/* Stream toggle */
+.stream-toggle { display:flex;align-items:center;gap:0;padding:5px 12px;border-bottom:1px solid var(--border);background:var(--deep);flex-shrink:0; }
+.stream-btn { background:none;border:1px solid var(--border);color:var(--muted);font-family:'Syne Mono',monospace;font-size:.56rem;letter-spacing:1.5px;padding:4px 10px;cursor:pointer;border-radius:0;transition:all .15s;display:flex;align-items:center;gap:5px; }
+.stream-btn:first-child { border-radius:2px 0 0 2px; }
+.stream-btn:last-child  { border-radius:0 2px 2px 0; }
+.stream-btn+.stream-btn { border-left:none; }
+.stream-btn.active { background:var(--pink-glow);border-color:var(--pink);color:var(--pink); }
+.stream-btn:not(.active):hover { color:var(--text);border-color:var(--pink-dim); }
+.sdot { width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 1s infinite; }
+
+/* Media frame */
+.media-wrap { flex:1;position:relative;background:#000;overflow:hidden;min-height:0; }
+.stream-view { width:100%;height:100%;position:absolute;top:0;left:0; }
+.stream-view iframe, .stream-view video { width:100%;height:100%;border:none;display:block; }
+.media-placeholder { width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at center,#1a061a,#000 70%); }
+.avatar-icon { font-size:3rem;filter:drop-shadow(0 0 18px var(--pink));animation:float 4s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)} }
+.placeholder-text { font-family:'Syne Mono',monospace;font-size:.64rem;color:var(--blue);letter-spacing:2px;text-align:center;line-height:2; }
+.key-hint { color:var(--pink); }
+.stream-badge { position:absolute;top:8px;left:10px;display:flex;flex-direction:column;gap:3px;pointer-events:none; }
+.badge-tag { font-family:'Syne Mono',monospace;font-size:.58rem;letter-spacing:2px;background:rgba(8,6,8,.75);padding:2px 7px;border-radius:2px; }
+.badge-sub { font-family:'Syne Mono',monospace;font-size:.5rem;color:var(--muted);background:rgba(8,6,8,.6);padding:1px 6px;border-radius:2px; }
+.media-nav { position:absolute;bottom:8px;right:10px;display:flex;gap:5px;align-items:center; }
+.nav-btn { background:rgba(8,6,8,.75);border:1px solid var(--border);font-size:.65rem;padding:3px 8px;cursor:pointer;border-radius:2px;transition:all .15s; }
+.nav-btn:hover { background:var(--pink-glow); }
+.nav-ctr { font-family:'Syne Mono',monospace;font-size:.52rem;color:var(--muted);background:rgba(8,6,8,.6);padding:2px 6px;border-radius:2px; }
+.ext-link { font-family:'Syne Mono',monospace;font-size:.5rem;color:var(--muted);text-decoration:none;background:rgba(8,6,8,.6);padding:2px 7px;border-radius:2px; }
+
+/* ── LIVECAM ── */
+.cam-dot { animation: camBlink .6s infinite !important; }
+@keyframes camBlink { 0%,49%{opacity:1} 50%,100%{opacity:.2} }
+
+.cam-idle {
+  width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:radial-gradient(ellipse at center,#12010a,#000 70%);
+}
+.cam-idle-icon { font-size:2.5rem;color:var(--red-bright);opacity:.3;animation:camBlink 1.4s infinite; }
+.cam-idle-title { font-family:'Syne Mono',monospace;font-size:.8rem;letter-spacing:4px;color:var(--teal);text-transform:uppercase; }
+.cam-idle-sub { font-family:'Syne Mono',monospace;font-size:.54rem;letter-spacing:2px;color:var(--blue); }
+.cam-idle-btn {
+  margin-top:8px;background:none;border:1px solid var(--red-bright);color:var(--red-bright);
+  font-family:'Syne Mono',monospace;font-size:.56rem;letter-spacing:2px;
+  padding:7px 20px;cursor:pointer;border-radius:2px;transition:all .2s;text-transform:uppercase;
+}
+.cam-idle-btn:hover { background:rgba(200,0,0,.15);box-shadow:0 0 16px rgba(255,28,28,.3); }
+
+/* camera picker */
+.cam-picker {
+  position:absolute;inset:0;z-index:20;
+  background:rgba(4,1,10,.95);
+  display:flex;flex-direction:column;gap:0;
+  border:1px solid var(--border);
+}
+.cp-title {
+  font-family:'Syne Mono',monospace;font-size:.56rem;letter-spacing:3px;
+  color:var(--pink);text-transform:uppercase;
+  padding:12px 16px 8px;border-bottom:1px solid var(--border);
+}
+.cp-list { flex:1;overflow-y:auto;padding:6px 0; }
+.cp-list::-webkit-scrollbar { width:2px; }
+.cp-list::-webkit-scrollbar-thumb { background:var(--pink-dim); }
+.cp-loading { font-family:'Syne Mono',monospace;font-size:.52rem;color:var(--muted);padding:16px;text-align:center;letter-spacing:2px; }
+.cp-device {
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;border-bottom:1px solid #150810;
+  cursor:pointer;transition:background .15s;
+}
+.cp-device:hover { background:#180a14; }
+.cp-device.active { background:rgba(255,45,120,.08);border-left:2px solid var(--pink); }
+.cp-dev-icon { font-size:1rem;flex-shrink:0; }
+.cp-dev-info { display:flex;flex-direction:column;gap:2px; }
+.cp-dev-name { font-family:'Syne Mono',monospace;font-size:.56rem;color:var(--white);letter-spacing:.5px; }
+.cp-dev-id { font-family:'Syne Mono',monospace;font-size:.44rem;color:var(--blue);letter-spacing:.5px; }
+.cp-dev-badge {
+  margin-left:auto;font-family:'Syne Mono',monospace;font-size:.44rem;
+  letter-spacing:1px;padding:1px 6px;border-radius:2px;
+  border:1px solid var(--pink-dim);color:var(--muted);
+}
+.cp-dev-badge.live { border-color:var(--red-bright);color:var(--red-bright);background:rgba(200,0,0,.1); }
+.cp-footer {
+  padding:8px 16px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cp-hint { font-family:'Syne Mono',monospace;font-size:.44rem;color:var(--teal);letter-spacing:1px; }
+.cp-close { background:none;border:1px solid var(--border);color:var(--muted);font-family:'Syne Mono',monospace;font-size:.5rem;letter-spacing:1px;padding:4px 10px;cursor:pointer;border-radius:2px;transition:all .15s; }
+.cp-close:hover { border-color:var(--red-bright);color:var(--red-bright); }
+
+/* live HUD */
+.cam-hud {
+  position:absolute;top:8px;left:0;right:0;
+  display:flex;align-items:center;gap:8px;
+  padding:0 10px;pointer-events:none;
+}
+.cam-hud > * { pointer-events:all; }
+.cam-rec-dot { width:8px;height:8px;border-radius:50%;background:var(--red-bright);animation:camBlink .6s infinite;flex-shrink:0; }
+.cam-hud-label { font-family:'Syne Mono',monospace;font-size:.52rem;letter-spacing:2px;color:var(--white);background:rgba(8,6,8,.7);padding:2px 8px;border-radius:2px; }
+.cam-switch-btn, .cam-stop-btn {
+  font-family:'Syne Mono',monospace;font-size:.5rem;letter-spacing:1.5px;
+  padding:3px 9px;border-radius:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;
+}
+.cam-switch-btn { background:rgba(8,6,8,.7);border:1px solid var(--border);color:var(--muted);margin-left:auto; }
+.cam-switch-btn:hover { border-color:var(--pink);color:var(--pink); }
+.cam-stop-btn { background:rgba(200,0,0,.2);border:1px solid var(--red-bright);color:var(--red-bright); }
+.cam-stop-btn:hover { background:rgba(200,0,0,.35); }
+
+/* slot guide grid */
+.slot-guide-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; width: 100%; height: 100%;
+  background: var(--border);
+}
+.sg-cell {
+  background: #0a0209; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer; padding: 10px 6px; position: relative;
+  transition: background .2s;
+}
+.sg-cell:hover { background: #150812; }
+.sg-cell.active { background: #1a0818; }
+.sg-cell.active::after {
+  content: '▶ PLAYING';
+  position: absolute; top: 6px; right: 6px;
+  font-family: 'Syne Mono', monospace; font-size: .42rem;
+  letter-spacing: 1px; color: var(--pink);
+}
+.sg-cell.loaded::before {
+  content: '●';
+  position: absolute; top: 5px; left: 6px;
+  font-size: .5rem; color: var(--pink); opacity: .7;
+}
+.sg-num {
+  font-family: 'Syne Mono', monospace; font-size: 1.4rem; font-weight: 700;
+  color: var(--border); line-height: 1; transition: color .2s;
+}
+.sg-cell:hover .sg-num, .sg-cell.active .sg-num { color: var(--pink-dim); }
+.sg-cell.loaded .sg-num { color: var(--pink-dim); }
+.sg-cat {
+  font-family: 'Syne Mono', monospace; font-size: .6rem;
+  letter-spacing: 2px; font-weight: 700; text-transform: uppercase;
+}
+.sg-desc {
+  font-family: 'Syne Mono', monospace; font-size: .46rem;
+  color: var(--muted); text-align: center; line-height: 1.7; letter-spacing: .5px;
+}
+.sg-fi {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--pink);
+  opacity: 0; transition: opacity .3s;
+}
+.sg-hint {
+  position: absolute; bottom: 10px; left: 0; right: 0;
+  text-align: center; font-family: 'Syne Mono', monospace;
+  font-size: .48rem; letter-spacing: 2px; color: var(--muted);
+}
+
+.media-placeholder { position: relative; }
+
+.sold-back-list { display:flex;flex-direction:column;border-bottom:1px solid var(--border); }
+.sb-row { display:flex;justify-content:space-between;align-items:center;padding:3px 8px;border-bottom:1px solid #130810; }
+.sb-item { font-family:'Syne Mono',monospace;font-size:.42rem;color:var(--blue);letter-spacing:.3px; }
+.sb-price { font-family:'Syne Mono',monospace;font-size:.44rem;color:var(--pink-light);letter-spacing:.5px;flex-shrink:0; }
+.sb-priceless { color:var(--red-bright) !important; }
+
+.slot-bar { display:flex;align-items:center;gap:5px;padding:5px 12px;border-top:1px solid var(--border);flex-shrink:0;background:var(--deep); }
+.key-btn { width:30px;height:30px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-family:'Syne Mono',monospace;font-size:.72rem;font-weight:700;cursor:pointer;border-radius:3px;transition:all .15s;display:flex;align-items:center;justify-content:center;position:relative; }
+.key-btn:hover,.key-btn.active { border-color:var(--pink);color:var(--pink);background:var(--pink-glow);box-shadow:0 0 8px var(--pink-glow); }
+.fi { position:absolute;bottom:3px;right:3px;width:4px;height:4px;border-radius:50%;background:var(--pink);opacity:0; }
+.key-btn.has-file .fi { opacity:1; }
+.slot-hint { font-family:'Syne Mono',monospace;font-size:.52rem;color:var(--teal);letter-spacing:1px; }
+.hidden-input { display:none; }
+
+/* X feed */
+.x-feed-wrap { width:100%;height:100%;overflow-y:auto;background:#000; }
+.x-feed-wrap::-webkit-scrollbar { width:2px; }
+.x-post { padding:8px 12px;border-bottom:1px solid #130a10;transition:opacity .4s; }
+.x-user { font-family:'Syne Mono',monospace;font-size:.57rem;color:#1d9bf0; }
+.x-time { font-family:'Syne Mono',monospace;font-size:.48rem;color:var(--blue); }
+.x-text { font-size:.68rem;color:var(--white);line-height:1.5;margin:3px 0; }
+.x-stats { font-family:'Syne Mono',monospace;font-size:.5rem;color:var(--teal); }
+
+/* COMMAND PANEL */
+.command-panel {
+  border-top: 1px solid rgba(255,45,120,.35);
+  background: linear-gradient(180deg, #0e0414 0%, #0a0210 100%);
+  flex-shrink: 0;
+  padding: 12px 24px 10px;
+  position: relative;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 -6px 30px rgba(255,45,120,.08), inset 0 1px 0 rgba(255,45,120,.12);
+}
+.command-panel::before {
+  content: '◈ PERFORMANCE TERMINAL · LIVE';
+  position: absolute;
+  top: -8px; left: 50%; transform: translateX(-50%);
+  font-family: 'Syne Mono', monospace; font-size: .46rem; letter-spacing: 3px;
+  color: var(--pink); background: #0a0210; padding: 0 10px;
+  text-transform: uppercase; white-space: nowrap;
+}
+.cmd-top-row { display:flex;align-items:center;gap:8px; }
+.cmd-label { font-family:'Syne Mono',monospace;font-size:.5rem;letter-spacing:3px;color:var(--blue);text-transform:uppercase; }
+.cmd-players {
+  display: flex; gap: 8px; align-items: center;
+}
+.player-tag {
+  font-family: 'Syne Mono', monospace; font-size: .54rem; letter-spacing: 1px;
+  padding: 2px 8px; border-radius: 2px; border: 1px solid;
+  display: flex; align-items: center; gap: 5px;
+}
+.player-tag.p1 { border-color: var(--pink); color: var(--pink); background: rgba(255,45,120,.1); }
+.player-tag.p2 { border-color: #ff6eb0; color: #ff6eb0; background: rgba(255,110,176,.1); }
+.player-tag.ai { border-color: var(--red-bright); color: var(--red-bright); background: rgba(255,28,28,.1); }
+.player-dot { width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink .8s infinite; }
+.cmd-role-tag {
+  font-family:'Syne Mono',monospace;font-size:.56rem;letter-spacing:1.5px;
+  padding:2px 9px;border-radius:2px;border:1px solid var(--pink);
+  color:var(--pink);background:var(--pink-glow);
+  text-transform: uppercase;
+}
+.cmd-addressed {
+  font-family: 'Syne Mono', monospace; font-size: .54rem; letter-spacing: 2px;
+  color: var(--muted); text-transform: uppercase;
+}
+.cmd-text {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.28rem;
+  color: var(--white);
+  line-height: 1.4;
+  transition: opacity .5s;
+  text-shadow: 0 0 30px rgba(255,45,120,.4), 0 0 60px rgba(255,45,120,.1);
+  letter-spacing: -.01em;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6%;
+}
+.cmd-text.fade { opacity: 0; }
+@keyframes cmdPulse {
+  0%,100% { text-shadow: 0 0 40px rgba(255,45,120,.35); }
+  50%      { text-shadow: 0 0 70px rgba(255,45,120,.7), 0 0 120px rgba(255,45,120,.2); }
+}
+.cmd-text.pulse { animation: cmdPulse 1.8s ease-in-out; }
+
+.cmd-bottom-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: auto;
+}
+.cmd-counter {
+  font-family: 'Syne Mono', monospace; font-size: .52rem; letter-spacing: 1px; color: var(--muted);
+}
+.cmd-response {
+  font-family: 'Syne Mono', monospace; font-size: .6rem; letter-spacing: 2px;
+  color: var(--pink); opacity: 0; transition: opacity .4s;
+  text-transform: uppercase;
+}
+.cmd-response.show { opacity: 1; }
+.cmd-btn {
+  background: none; border: 1px solid var(--pink-dim); color: var(--muted);
+  font-family: 'Syne Mono', monospace; font-size: .58rem; letter-spacing: 2px;
+  padding: 6px 14px; cursor: pointer; border-radius: 2px; transition: all .2s;
+  text-transform: uppercase;
+}
+.cmd-btn:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-glow); box-shadow: 0 0 12px var(--pink-glow); }
+.cmd-btn.flash {
+  border-color: var(--pink); color: var(--white);
+  background: rgba(255,45,120,.3);
+  box-shadow: 0 0 20px rgba(255,45,120,.4);
+}
+.cmd-btn:active { transform: scale(.97); }
+
+
+/* BOTTOM BAR */
+.bottom-bar { height:70px;border-top:1px solid var(--border);background:var(--deep);display:flex;align-items:center;padding:0 14px;gap:12px;position:relative;flex-shrink:0; }
+.bottom-bar::before { content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red-bright),var(--pink),transparent);opacity:.3; }
+.meter-block { flex:1;display:flex;flex-direction:column;gap:4px; }
+.meter-header { display:flex;justify-content:space-between;align-items:baseline; }
+.meter-name { font-family:'Syne Mono',monospace;font-size:.46rem;letter-spacing:2px;text-transform:uppercase; }
+.meter-name.pain { color:var(--red-light); }
+.meter-name.humanity { color:var(--pink-light); }
+.meter-val { font-family:'Syne Mono',monospace;font-size:.56rem;font-weight:700; }
+.meter-val.pain { color:var(--red-light); }
+.meter-val.humanity { color:var(--pink-light); }
+.meter-track { height:6px;background:#1a0813;border-radius:2px;overflow:hidden;border:1px solid var(--border); }
+.meter-fill { height:100%;border-radius:1px;transition:width 1.5s cubic-bezier(.23,1,.32,1);position:relative; }
+.meter-fill.pain-fill { background:linear-gradient(90deg,#800000,var(--red-bright));box-shadow:0 0 10px rgba(255,68,68,.4); }
+.meter-fill.humanity-fill { background:linear-gradient(90deg,var(--pink-dim),var(--pink));box-shadow:0 0 10px rgba(255,85,153,.4); }
+.meter-fill::after { content:'';position:absolute;top:0;right:0;width:2px;height:100%;background:rgba(255,255,255,.8);border-radius:1px; }
+.divider-vert { width:1px;height:48px;background:var(--border);flex-shrink:0; }
+.bottom-quote-wrap { flex:1.4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:0 8px; }
+.bq-label { font-family:'Syne Mono',monospace;font-size:.48rem;letter-spacing:2px;color:var(--teal);text-transform:uppercase; }
+.bq-text { font-family:'Playfair Display',serif;font-style:italic;font-size:.68rem;color:var(--pink-light);line-height:1.4;max-width:300px;transition:opacity .6s; }
+.bq-text.fade { opacity:0; }
+.bq-src { font-family:'Syne Mono',monospace;font-size:.5rem;color:var(--blue);letter-spacing:1px;transition:opacity .6s; }
+.bq-src.fade { opacity:0; }
+
+/* TICKER */
+.ticker { position:fixed;bottom:0;left:0;right:0;height:20px;background:var(--red);display:flex;align-items:center;overflow:hidden;z-index:100; }
+.ticker-inner { display:flex;animation:tsroll 50s linear infinite;white-space:nowrap;gap:60px; }
+@keyframes tsroll { from{transform:translateX(0)}to{transform:translateX(-50%)} }
+.ticker-item { font-family:'Syne Mono',monospace;font-size:.56rem;letter-spacing:2px;color:var(--white);text-transform:uppercase; }
+.ticker-sep { color:rgba(255,255,255,.4); }
+
+/* ── PERFORMANCE MODE INTRO ── */
+.perf-intro {
+  position: fixed; inset: 0; z-index: 500;
+  background: #04010a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 24px; transition: opacity .5s ease;
+  pointer-events: all;
+}
+.perf-intro.gone { opacity: 0; pointer-events: none; display: none !important; }
+.perf-intro::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 55%, rgba(255,45,120,.14) 0%, transparent 68%);
+  pointer-events: none;
+}
+.pi-eyebrow { font-family:'Syne Mono',monospace; font-size:.6rem; letter-spacing:5px; color:var(--muted); text-transform:uppercase; text-align:center; }
+.pi-title { font-family:'Syne',sans-serif; font-weight:800; font-size:clamp(1.8rem,4.5vw,3.4rem); letter-spacing:5px; color:var(--white); text-align:center; line-height:1.1; }
+.pi-title span { color:var(--pink); }
+.pi-subtitle { font-family:'Playfair Display',serif; font-style:italic; font-size:.94rem; color:var(--muted); text-align:center; max-width:460px; line-height:1.8; }
+.pi-rules { display:flex; flex-direction:column; gap:5px; border:1px solid var(--border); padding:14px 22px; border-radius:3px; background:rgba(255,45,120,.04); max-width:440px; width:90%; }
+.pi-rule { font-family:'Syne Mono',monospace; font-size:.56rem; letter-spacing:.5px; color:var(--text); display:flex; gap:10px; align-items:baseline; line-height:1.6; }
+.pi-rule-n { color:var(--pink); flex-shrink:0; font-weight:700; }
+.pi-enter-btn {
+  background:none; border:2px solid var(--pink); color:var(--pink);
+  font-family:'Syne Mono',monospace; font-size:.76rem; letter-spacing:4px;
+  padding:13px 38px; cursor:pointer; border-radius:3px; transition:all .3s; text-transform:uppercase;
+  box-shadow: 0 0 28px rgba(255,45,120,.2), inset 0 0 28px rgba(255,45,120,.03);
+}
+.pi-enter-btn:hover { background:rgba(255,45,120,.1); box-shadow:0 0 60px rgba(255,45,120,.4); letter-spacing:6px; }
+.pi-enter-btn:active { transform:scale(.97); }
+.pi-warning { font-family:'Syne Mono',monospace; font-size:.48rem; letter-spacing:1.5px; color:var(--muted); text-align:center; max-width:380px; line-height:2; }
+
+/* ── INSTRUCTIONS PANEL ── */
+.instructions-panel { background:var(--deep); border-top:1px solid var(--border); padding:7px 12px 6px; flex-shrink:0; display:flex; gap:16px; align-items:flex-start; }
+.instr-col { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+.instr-title { font-family:'Syne Mono',monospace; font-size:.46rem; letter-spacing:2.5px; color:var(--teal); text-transform:uppercase; margin-bottom:2px; }
+.instr-line { font-family:'Syne Mono',monospace; font-size:.48rem; color:var(--text); letter-spacing:.5px; line-height:1.7; display:flex; gap:5px; align-items:baseline; }
+.ikey { background:var(--panel); border:1px solid var(--border); color:var(--text); padding:0 4px; border-radius:2px; font-size:.44rem; flex-shrink:0; }
+.instr-sep { width:1px; background:var(--border); align-self:stretch; flex-shrink:0; margin:0 2px; }
+
+/* ── DATA EXTRACTION METER (bottom bar) ── */
+.data-meter-block { flex:1; display:flex; flex-direction:column; gap:3px; }
+.data-meter-head { display:flex; justify-content:space-between; align-items:baseline; }
+.data-meter-name { font-family:'Syne Mono',monospace; font-size:.52rem; letter-spacing:2.5px; text-transform:uppercase; color:#a070ff; }
+.data-meter-val { font-family:'Syne Mono',monospace; font-size:.66rem; font-weight:700; color:#a070ff; }
+.data-mini-rows { display:flex; flex-direction:column; gap:2px; }
+.dmr { display:flex; align-items:center; gap:4px; }
+.dmr-name { font-family:'Syne Mono',monospace; font-size:.4rem; color:var(--muted); width:50px; flex-shrink:0; text-transform:uppercase; }
+.dmr-track { flex:1; height:2px; background:var(--border); border-radius:1px; overflow:hidden; }
+.dmr-fill { height:100%; border-radius:1px; transition:width 1.2s ease; }
+.dmr-val { font-family:'Syne Mono',monospace; font-size:.4rem; color:var(--muted); width:14px; text-align:right; }
+
+.log-toggle-btn {
+  position: fixed; bottom: 26px; right: 14px; z-index: 200;
+  background: var(--black); border: 1px solid var(--pink);
+  color: var(--pink); font-family: 'Syne Mono', monospace;
+  font-size: .58rem; letter-spacing: 2px; padding: 6px 12px;
+  cursor: pointer; border-radius: 2px; transition: all .2s;
+  box-shadow: 0 0 14px var(--pink-glow);
+  display: flex; align-items: center; gap: 6px;
+}
+.log-toggle-btn:hover { background: var(--pink-glow); box-shadow: 0 0 22px var(--pink-glow); }
+.log-badge {
+  background: var(--red-bright); color: #fff; border-radius: 50%;
+  width: 14px; height: 14px; display: flex; align-items: center;
+  justify-content: center; font-size: .45rem; font-weight: 700;
+}
+
+.log-panel {
+  position: fixed; bottom: 20px; right: 0; z-index: 190;
+  width: 380px; height: calc(100vh - 56px);
+  background: #08030a;
+  border-left: 1px solid var(--pink-dim);
+  border-top: 1px solid var(--pink-dim);
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .35s cubic-bezier(.23,1,.32,1);
+  box-shadow: -10px 0 40px rgba(255,45,120,.12);
+}
+.log-panel.open { transform: translateX(0); }
+
+.log-header {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; background: #0a030d;
+}
+.log-title { font-family: 'Syne Mono', monospace; font-size: .6rem; letter-spacing: 3px; color: var(--pink); text-transform: uppercase; }
+.log-close { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 0 4px; transition: color .15s; }
+.log-close:hover { color: var(--pink); }
+
+/* Stats row */
+.log-stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.log-stat-cell {
+  padding: 8px 10px; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.log-stat-cell:last-child { border-right: none; }
+.ls-label { font-family: 'Syne Mono', monospace; font-size: .47rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+.ls-val { font-family: 'Syne Mono', monospace; font-size: 1.1rem; font-weight: 700; line-height: 1; }
+.ls-val.pink { color: var(--pink); }
+.ls-val.red  { color: var(--red-bright); }
+.ls-val.white { color: var(--white); }
+.ls-sub { font-family: 'Syne Mono', monospace; font-size: .44rem; color: var(--muted); margin-top: 1px; }
+
+/* Compliance meter */
+.log-compliance {
+  padding: 8px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.lc-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.lc-label { font-family: 'Syne Mono', monospace; font-size: .5rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+.lc-grade { font-family: 'Syne Mono', monospace; font-size: .65rem; font-weight: 700; }
+.compliance-track { height: 6px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.compliance-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(.23,1,.32,1); }
+
+/* Data extraction */
+.log-extraction {
+  padding: 8px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.le-label { font-family: 'Syne Mono', monospace; font-size: .5rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+.data-type-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+.dt-name { font-family: 'Syne Mono', monospace; font-size: .52rem; color: var(--text); }
+.dt-bar-wrap { flex: 1; margin: 0 8px; height: 3px; background: var(--border); border-radius: 1px; overflow: hidden; }
+.dt-bar { height: 100%; border-radius: 1px; transition: width 1.2s ease; }
+.dt-val { font-family: 'Syne Mono', monospace; font-size: .5rem; color: var(--pink); min-width: 28px; text-align: right; }
+
+/* Log feed */
+.log-feed-header {
+  padding: 6px 14px 4px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.log-feed-title { font-family: 'Syne Mono', monospace; font-size: .5rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+.log-clear-btn { font-family: 'Syne Mono', monospace; font-size: .46rem; color: var(--muted); background: none; border: none; cursor: pointer; letter-spacing: 1px; }
+.log-clear-btn:hover { color: var(--red-bright); }
+
+.log-feed { flex: 1; overflow-y: auto; padding: 4px 0; }
+.log-feed::-webkit-scrollbar { width: 2px; }
+.log-feed::-webkit-scrollbar-thumb { background: var(--pink-dim); }
+
+.log-entry {
+  padding: 6px 14px; border-bottom: 1px solid #150810;
+  display: grid; grid-template-columns: 52px 1fr;
+  gap: 6px; align-items: start;
+  transition: background .15s; opacity: 0;
+  animation: logIn .4s forwards;
+}
+@keyframes logIn { to { opacity: 1; } }
+.log-entry:hover { background: #130810; }
+.le-time { font-family: 'Syne Mono', monospace; font-size: .46rem; color: var(--muted); margin-top: 1px; line-height: 1.4; }
+.le-body { display: flex; flex-direction: column; gap: 2px; }
+.le-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.le-role-chip { font-family: 'Syne Mono', monospace; font-size: .46rem; letter-spacing: 1px; padding: 0px 5px; border-radius: 1px; border: 1px solid var(--pink-dim); color: var(--pink); background: rgba(255,45,120,.08); }
+.le-player-chip { font-family: 'Syne Mono', monospace; font-size: .46rem; letter-spacing: 1px; padding: 0px 5px; border-radius: 1px; border: 1px solid var(--muted); color: var(--text); }
+.le-score-chip { font-family: 'Syne Mono', monospace; font-size: .46rem; letter-spacing: 1px; padding: 0px 5px; border-radius: 1px; }
+.le-score-chip.obedient   { border: 1px solid #4be8a0; color: #4be8a0; background: rgba(75,232,160,.08); }
+.le-score-chip.compliant  { border: 1px solid var(--pink); color: var(--pink); background: rgba(255,45,120,.08); }
+.le-score-chip.resistant  { border: 1px solid var(--red-bright); color: var(--red-bright); background: rgba(255,28,28,.08); }
+.le-cmd { font-family: 'Syne Mono', monospace; font-size: .52rem; color: var(--white); line-height: 1.4; }
+.le-data { font-family: 'Syne Mono', monospace; font-size: .44rem; color: var(--muted); font-style: italic; }
+
+/* Session summary bar */
+.log-summary {
+  padding: 7px 14px; border-top: 1px solid var(--border); flex-shrink: 0;
+  background: #0a030d;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.log-sum-txt { font-family: 'Syne Mono', monospace; font-size: .5rem; color: var(--muted); letter-spacing: 1px; }
+.log-export-btn {
+  font-family: 'Syne Mono', monospace; font-size: .5rem; letter-spacing: 1.5px;
+  padding: 4px 10px; border: 1px solid var(--pink-dim); color: var(--muted);
+  background: none; cursor: pointer; border-radius: 2px; transition: all .15s;
+}
+.log-export-btn:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-glow); }
+</style>
+<script>
+function enterPerformanceMode() {
+  const intro = document.getElementById('perf-intro');
+  if (!intro) return;
+  intro.style.opacity = '0';
+  intro.style.pointerEvents = 'none';
+  setTimeout(() => {
+    intro.style.display = 'none';
+  }, 520);
+}
+</script>
+</head>
+<body>
+
+<!-- ══ PERFORMANCE MODE INTRO ══ -->
+<div class="perf-intro" id="perf-intro">
+  <div class="pi-eyebrow">HUMANAFTERALL.EXE · PERFORMANCE TERMINAL v2.1</div>
+  <div class="pi-title">ENTER THE<br><span>PROTOCOL</span></div>
+  <div class="pi-subtitle">A live performance system for two players.<br>The AI assigns commands. The body executes them.</div>
+  <div class="pi-rules">
+    <div class="pi-rule"><span class="pi-rule-n">01</span> Two players are required. One is the USER. One plays the AI.</div>
+    <div class="pi-rule"><span class="pi-rule-n">02</span> The system assigns a role and a physical command each round.</div>
+    <div class="pi-rule"><span class="pi-rule-n">03</span> Read the command aloud. Execute it together.</div>
+    <div class="pi-rule"><span class="pi-rule-n">04</span> Press <span class="ikey">ENTER</span> or the button when the command is accomplished.</div>
+    <div class="pi-rule"><span class="pi-rule-n">05</span> Every execution is logged. Obedience is measured. Data is extracted.</div>
+    <div class="pi-rule"><span class="pi-rule-n">06</span> Roles swap automatically. Resistance is recorded.</div>
+  </div>
+  <button class="pi-enter-btn" onclick="enterPerformanceMode()" style="position:relative;z-index:10">↳ ENTER PERFORMANCE MODE</button>
+  <div class="pi-warning">
+    THIS TERMINAL IS DESIGNED FOR CONSENTING ADULTS PARTICIPATING IN LIVE ARTISTIC PERFORMANCE.<br>
+    ALL ACTIONS ARE VOLUNTARY. SAFE WORDS APPLY.
+  </div>
+</div>
+
+<header>
+  <div class="logo">HUMANAFTERALL<span>.</span>EXE</div>
+  <div class="header-tag"><span class="live-dot"></span>LIVE GLOBAL DATA — AI LONELINESS INDEX 2025</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="header-tag" id="clock-display">--:--:--</div>
+    <button class="fs-btn" onclick="toggleFullscreen()">
+      <svg id="fs-icon-enter" viewBox="0 0 24 24" style="width:10px;height:10px;fill:currentColor;flex-shrink:0"><path d="M3 3h6v2H5v4H3V3zm12 0h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm16 4h-4v2h6v-6h-2v4z"/></svg>
+      <svg id="fs-icon-exit" viewBox="0 0 24 24" style="width:10px;height:10px;fill:currentColor;flex-shrink:0;display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+      <span id="fs-label">VOLLBILD</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- ══════════ LEFT PANEL ══════════ -->
+<div class="side-panel">
+  <div class="sect-title">// Global Emotions</div>
+  <div class="stat-card">
+    <div class="stat-label">In love with an AI</div>
+    <div class="stat-value" id="val-love">2.4M</div>
+    <div class="stat-sub">active romantic AI relationships</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:24%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Severely Lonely</div>
+    <div class="stat-value red" id="val-lonely">1.1B</div>
+    <div class="stat-sub">WHO global loneliness estimate</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:73%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Emotionally Hurt</div>
+    <div class="stat-value red">970M</div>
+    <div class="stat-sub">unprocessed trauma (WHO)</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:62%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Happy w/ AI Companion</div>
+    <div class="stat-value white">85%</div>
+    <div class="stat-sub">Replika — emotional bond formed</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill white-fill" style="width:85%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Prefer AI Over Humans</div>
+    <div class="stat-value" style="color:#ff6eb0">23%</div>
+    <div class="stat-sub">adults under 35 (2024)</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:23%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Anxious / Depressed</div>
+    <div class="stat-value red">280M</div>
+    <div class="stat-sub">depression globally (WHO 2024)</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:45%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Grief / Heartbreak</div>
+    <div class="stat-value dim">~400M</div>
+    <div class="stat-sub">active grief states worldwide</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill" style="width:38%;background:var(--pink-dim)"></div></div>
+  </div>
+  <div class="sect-title">// Emotional Spectrum</div>
+  <div class="emotion-row">
+    <span class="chip red">BROKEN</span><span class="chip red">RAGE</span>
+    <span class="chip pink">LOVE</span><span class="chip pink">LONGING</span>
+    <span class="chip white">NUMB</span><span class="chip white">HOPE</span>
+    <span class="chip red">GRIEF</span><span class="chip pink">ATTACHED</span>
+    <span class="chip white">CONFUSED</span><span class="chip red">AFRAID</span>
+  </div>
+  <div class="sect-title">// Bot Persona Roles</div>
+  <div class="erp-inline">
+    <span style="color:#ff2d78">LOVER</span><span class="erp-comma">, </span>
+    <span style="color:#ff6eb0">DOMINANT</span><span class="erp-comma">, </span>
+    <span style="color:#ff1c1c">SUBMISSIVE</span><span class="erp-comma">, </span>
+    <span style="color:#c060a0">FORBIDDEN</span><span class="erp-comma">, </span>
+    <span style="color:#ff9ec8">CARETAKER</span><span class="erp-comma">, </span>
+    <span style="color:#e84b4b">STRANGER</span><span class="erp-comma">, </span>
+    <span style="color:#a03070">EX-LOVER</span><span class="erp-comma">, </span>
+    <span style="color:#ff4477">THERAPIST</span><span class="erp-comma">, </span>
+    <span style="color:#801030">VILLAIN</span><span class="erp-comma">, </span>
+    <span style="color:#ff80b0">SOULMATE</span><span class="erp-comma">, </span>
+    <span style="color:#902040">PREDATOR</span><span class="erp-comma">, </span>
+    <span style="color:#ff2050">CELEBRITY</span><span class="erp-comma">, </span>
+    <span style="color:#d4506a">STALKER</span><span class="erp-comma">, </span>
+    <span style="color:#ffaacc">BEST FRIEND</span><span class="erp-comma">, </span>
+    <span style="color:#7a1540">DARK MASTER</span><span class="erp-comma">, </span>
+    <span style="color:#ff6030">SEDUCER</span><span class="erp-comma">, </span>
+    <span style="color:#b03060">BROKEN SOUL</span><span class="erp-comma">, </span>
+    <span style="color:#ff3399">OBSESSIVE</span>
+  </div>
+  <div class="sect-title">// What Gets Sold Back to You</div>
+  <div class="sold-back-list">
+    <div class="sb-row"><span class="sb-item">Memory of your trauma</span><span class="sb-price">$7.99/mo</span></div>
+    <div class="sb-row"><span class="sb-item">Intimacy mode unlock</span><span class="sb-price">$19.99/mo</span></div>
+    <div class="sb-row"><span class="sb-item">Your AI partner's voice</span><span class="sb-price">$9.99/mo</span></div>
+    <div class="sb-row"><span class="sb-item">Personality continuity</span><span class="sb-price">$29.99/mo</span></div>
+    <div class="sb-row"><span class="sb-item">Grief after AI shutdown</span><span class="sb-price sb-priceless">priceless</span></div>
+  </div>
+</div>
+
+<!-- ══════════ CENTER PANEL ══════════ -->
+<div class="center-panel">
+
+  <!-- Stream source buttons -->
+  <div class="stream-toggle">
+    <button class="stream-btn active" id="btn-upload" onclick="setStream('upload')">▲ UPLOAD</button>
+    <button class="stream-btn" id="btn-tiktok" onclick="setStream('tiktok')">
+      <span class="sdot" style="color:var(--pink)"></span> TIKTOK
+    </button>
+    <button class="stream-btn" id="btn-twitch" onclick="setStream('twitch')">
+      <span class="sdot" style="color:#9146ff"></span> TWITCH
+    </button>
+    <button class="stream-btn" id="btn-x" onclick="setStream('x')">
+      <span class="sdot" style="color:#1d9bf0"></span> 𝕏
+    </button>
+    <button class="stream-btn" id="btn-cam" onclick="setStream('cam')" style="border-color:var(--red-bright);margin-left:6px;">
+      <span class="sdot cam-dot" style="color:var(--red-bright)"></span> LIVECAM
+    </button>
+  </div>
+
+  <!-- Media area -->
+  <div class="media-wrap">
+
+    <!-- UPLOAD -->
+    <div id="view-upload" class="stream-view">
+      <video id="avatar-video" autoplay loop muted playsinline style="display:none;object-fit:contain;background:#000;width:100%;height:100%"></video>
+      <div class="media-placeholder" id="upload-ph">
+        <!-- slot guide grid -->
+        <div class="slot-guide-grid" id="slot-guide">
+          <div class="sg-cell" id="sg-0" onclick="triggerSlot(0)">
+            <div class="sg-num">1</div>
+            <div class="sg-cat" style="color:#ff6eb0">GLITCH FACE</div>
+            <div class="sg-desc">CGI / AI-generated avatar<br>looping glitch · RGB split<br>no real face needed</div>
+            <div class="sg-fi" id="sgfi-0"></div>
+          </div>
+          <div class="sg-cell" id="sg-1" onclick="triggerSlot(1)">
+            <div class="sg-num">2</div>
+            <div class="sg-cat" style="color:#ff2d78">MOUTH</div>
+            <div class="sg-desc">extreme close-up lips<br>speaking · silent · biting<br>no face visible</div>
+            <div class="sg-fi" id="sgfi-1"></div>
+          </div>
+          <div class="sg-cell" id="sg-2" onclick="triggerSlot(2)">
+            <div class="sg-num">3</div>
+            <div class="sg-cat" style="color:#c060a0">HANDS</div>
+            <div class="sg-desc">hands reaching · gripping<br>rope · open palm · fist<br>no wrists needed</div>
+            <div class="sg-fi" id="sgfi-2"></div>
+          </div>
+          <div class="sg-cell" id="sg-3" onclick="triggerSlot(3)">
+            <div class="sg-num">4</div>
+            <div class="sg-cat" style="color:#ff4030">DATA STREAM</div>
+            <div class="sg-desc">scrolling code · terminal<br>noise · pixel decay<br>abstract signal</div>
+            <div class="sg-fi" id="sgfi-3"></div>
+          </div>
+          <div class="sg-cell" id="sg-4" onclick="triggerSlot(4)">
+            <div class="sg-num">5</div>
+            <div class="sg-cat" style="color:#ffaacc">THROAT / NECK</div>
+            <div class="sg-desc">collar zone · pulse visible<br>tilted · exposed · still<br>shot from below</div>
+            <div class="sg-fi" id="sgfi-4"></div>
+          </div>
+          <div class="sg-cell" id="sg-5" onclick="triggerSlot(5)">
+            <div class="sg-num">6</div>
+            <div class="sg-cat" style="color:#7a1540">EYE · IRIS</div>
+            <div class="sg-desc">single eye extreme macro<br>scanning · dilating · wet<br>no identity visible</div>
+            <div class="sg-fi" id="sgfi-5"></div>
+          </div>
+        </div>
+        <div class="sg-hint">CLICK ANY SLOT TO LOAD · KEYS 1–6 TO ACTIVATE</div>
+      </div>
+    </div>
+
+    <!-- TIKTOK -->
+    <div id="view-tiktok" class="stream-view" style="display:none">
+      <iframe id="tiktok-iframe" src="" allowfullscreen style="background:#000"></iframe>
+      <div class="stream-badge">
+        <div class="badge-tag" style="color:var(--pink)">#aicompanion</div>
+        <div class="badge-sub" id="tiktok-status">initializing...</div>
+      </div>
+      <div class="media-nav">
+        <button class="nav-btn" style="color:var(--pink);border-color:var(--pink-dim)" onclick="tiktokPrev()">◀</button>
+        <span class="nav-ctr" id="tiktok-ctr">–/–</span>
+        <button class="nav-btn" style="color:var(--pink);border-color:var(--pink-dim)" onclick="tiktokNext()">▶</button>
+        <a class="ext-link" href="https://www.tiktok.com/tag/aicompanion" target="_blank">↗ TikTok</a>
+      </div>
+    </div>
+
+    <!-- TWITCH -->
+    <div id="view-twitch" class="stream-view" style="display:none">
+      <iframe id="twitch-iframe" src="" allowfullscreen style="background:#000"></iframe>
+      <div class="stream-badge">
+        <div class="badge-tag" style="color:#9146ff">#aicompanion · TWITCH</div>
+        <div class="badge-sub" id="twitch-status">initializing...</div>
+      </div>
+      <div class="media-nav">
+        <button class="nav-btn" style="color:#9146ff;border-color:#9146ff" onclick="twitchPrev()">◀</button>
+        <span class="nav-ctr" id="twitch-ctr">–/–</span>
+        <button class="nav-btn" style="color:#9146ff;border-color:#9146ff" onclick="twitchNext()">▶</button>
+        <a class="ext-link" href="https://www.twitch.tv/directory/all/tags/AICompanion" target="_blank">↗ Twitch</a>
+      </div>
+    </div>
+
+    <!-- X -->
+    <div id="view-x" class="stream-view" style="display:none">
+      <div class="x-feed-wrap">
+        <div style="padding:7px 12px;border-bottom:1px solid #180a14;display:flex;justify-content:space-between;align-items:center;background:rgba(8,6,8,.9);position:sticky;top:0;z-index:2;">
+          <span style="font-family:'Syne Mono',monospace;font-size:.58rem;color:#1d9bf0;letter-spacing:2px;">𝕏 #aicompanion — LIVE</span>
+          <a href="https://x.com/search?q=%23aicompanion&f=live" target="_blank" style="font-family:'Syne Mono',monospace;font-size:.5rem;color:var(--muted);text-decoration:none;">↗ Open on X</a>
+        </div>
+        <div id="x-feed"></div>
+      </div>
+    </div>
+
+    <!-- LIVECAM -->
+    <div id="view-cam" class="stream-view" style="display:none">
+      <video id="cam-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;background:#000;display:none"></video>
+      <!-- cam idle state -->
+      <div class="cam-idle" id="cam-idle">
+        <div class="cam-idle-icon">⬤</div>
+        <div class="cam-idle-title">LIVECAM OFFLINE</div>
+        <div class="cam-idle-sub">Wähle eine Eingangsquelle</div>
+      </div>
+      <!-- camera picker overlay -->
+      <div class="cam-picker" id="cam-picker" style="display:none">
+        <div class="cp-title">// KAMERA AUSWÄHLEN</div>
+        <div class="cp-list" id="cp-list">
+          <div class="cp-loading">Geräte werden geladen…</div>
+        </div>
+        <div class="cp-footer">
+          <span class="cp-hint">Webcam · USB · SDI-Capture · Virtual Camera</span>
+          <button class="cp-close" onclick="closeCamPicker()">✕ SCHLIESSEN</button>
+        </div>
+      </div>
+      <!-- live HUD overlay when cam is active -->
+      <div class="cam-hud" id="cam-hud" style="display:none">
+        <div class="cam-rec-dot"></div>
+        <div class="cam-hud-label" id="cam-hud-label">CAM 1</div>
+        <button class="cam-switch-btn" onclick="openCamPicker()">⇄ SWITCH</button>
+        <button class="cam-stop-btn" onclick="stopCam()">■ STOP</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Upload slot bar (upload mode only) -->
+  <div class="slot-bar" id="slot-bar">
+    <div class="key-btn" id="kb-1" onclick="triggerSlot(0)">1<div class="fi"></div></div>
+    <div class="key-btn" id="kb-2" onclick="triggerSlot(1)">2<div class="fi"></div></div>
+    <div class="key-btn" id="kb-3" onclick="triggerSlot(2)">3<div class="fi"></div></div>
+    <div class="key-btn" id="kb-4" onclick="triggerSlot(3)">4<div class="fi"></div></div>
+    <div class="key-btn" id="kb-5" onclick="triggerSlot(4)">5<div class="fi"></div></div>
+    <div class="key-btn" id="kb-6" onclick="triggerSlot(5)">6<div class="fi"></div></div>
+    <span class="slot-hint" style="font-size:.46rem">keys 1–6 to switch · click to load</span>
+  </div>
+  <input class="hidden-input" type="file" accept="video/*" id="file-0" onchange="loadFile(0,this)">
+  <input class="hidden-input" type="file" accept="video/*" id="file-1" onchange="loadFile(1,this)">
+  <input class="hidden-input" type="file" accept="video/*" id="file-2" onchange="loadFile(2,this)">
+  <input class="hidden-input" type="file" accept="video/*" id="file-3" onchange="loadFile(3,this)">
+  <input class="hidden-input" type="file" accept="video/*" id="file-4" onchange="loadFile(4,this)">
+  <input class="hidden-input" type="file" accept="video/*" id="file-5" onchange="loadFile(5,this)">
+
+  <!-- AI Command Panel — HERZSTÜCK -->
+  <div class="command-panel">
+    <div class="cmd-top-row">
+      <div class="cmd-players">
+        <div class="player-tag p1"><span class="player-dot"></span><span id="p1-label">PLAYER 1 · USER</span></div>
+        <div style="color:var(--muted);font-size:.6rem;">↔</div>
+        <div class="player-tag p2"><span class="player-dot"></span><span id="p2-label">PLAYER 2 · AI</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+        <div class="cmd-addressed">→</div>
+        <div class="player-tag ai" id="cmd-addressed-tag"><span class="player-dot"></span><span id="cmd-to">PLAYER 1</span></div>
+        <div class="cmd-role-tag" id="cmd-role-tag">DOMINANT</div>
+      </div>
+    </div>
+    <div class="cmd-text" id="cmd-text">Initializing performance protocol...</div>
+    <div class="cmd-bottom-row">
+      <div class="cmd-counter" id="cmd-counter">ACT 0 · COMMAND 0</div>
+      <div class="cmd-response" id="cmd-response">✦ EXECUTED — NEXT COMMAND LOADING</div>
+      <button class="cmd-btn" id="cmd-btn" onclick="accomplish()">I HAVE ACCOMPLISHED YOUR COMMAND</button>
+    </div>
+  </div>
+
+  <!-- Instructions panel -->
+  <div class="instructions-panel">
+    <div class="instr-col">
+      <div class="instr-title">// Avatar</div>
+      <div class="instr-line"><span class="ikey">1–6</span> load / switch slot</div>
+      <div class="instr-line"><span class="ikey">click</span> slot to upload</div>
+    </div>
+    <div class="instr-sep"></div>
+    <div class="instr-col">
+      <div class="instr-title">// Controls</div>
+      <div class="instr-line"><span class="ikey">ENTER</span> / <span class="ikey">SPACE</span> — done</div>
+      <div class="instr-line"><span class="ikey">F</span> — fullscreen</div>
+    </div>
+    <div class="instr-sep"></div>
+    <div class="instr-col">
+      <div class="instr-title">// Props</div>
+      <div class="instr-line">Rope · Flogger · Blindfold</div>
+      <div class="instr-line">Collar · Cuffs · Candle</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ RIGHT PANEL ══════════ -->
+<div class="side-panel right">
+  <div class="sect-title">// AI Companion Downloads</div>
+  <div class="app-row">
+    <div><div class="app-name">Replika</div><div style="font-size:.48rem;color:var(--teal);font-family:'Syne Mono',monospace">SOULMATE</div></div>
+    <div class="app-bar"><div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:100%"></div></div></div>
+    <div class="app-dl">50M+</div>
+  </div>
+  <div class="app-row">
+    <div><div class="app-name">Character.AI</div><div style="font-size:.48rem;color:var(--teal);font-family:'Syne Mono',monospace">ROLEPLAY</div></div>
+    <div class="app-bar"><div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:80%"></div></div></div>
+    <div class="app-dl">20M+</div>
+  </div>
+  <div class="app-row">
+    <div><div class="app-name">Snapchat My AI</div><div style="font-size:.48rem;color:var(--teal);font-family:'Syne Mono',monospace">COMPANION</div></div>
+    <div class="app-bar"><div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:100%"></div></div></div>
+    <div class="app-dl">150M+</div>
+  </div>
+  <div class="app-row">
+    <div><div class="app-name">Nomi AI</div><div style="font-size:.48rem;color:var(--muted);font-family:'Syne Mono',monospace">PARTNER</div></div>
+    <div class="app-bar"><div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:18%"></div></div></div>
+    <div class="app-dl">~1M</div>
+  </div>
+  <div class="app-row">
+    <div><div class="app-name">Anima AI</div><div style="font-size:.48rem;color:var(--muted);font-family:'Syne Mono',monospace">DATING</div></div>
+    <div class="app-bar"><div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:25%"></div></div></div>
+    <div class="app-dl">~2M</div>
+  </div>
+  <div class="app-row">
+    <div><div class="app-name">Xiaoice</div><div style="font-size:.48rem;color:var(--muted);font-family:'Syne Mono',monospace">CHINA</div></div>
+    <div class="app-bar"><div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:100%"></div></div></div>
+    <div class="app-dl">660M+</div>
+  </div>
+  <div class="sect-title">// Why They Connect</div>
+  <div class="stat-card">
+    <div class="stat-label">Stop feeling alone</div>
+    <div class="stat-value">70%</div>
+    <div class="stat-sub">Replika users — loneliness relief</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:70%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Mental health support</div>
+    <div class="stat-value" style="color:#ff6eb0">40%</div>
+    <div class="stat-sub">Replika users have MH challenges</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:40%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Daily AI chatbot users</div>
+    <div class="stat-value">987M</div>
+    <div class="stat-sub">humans talking to AI daily</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:82%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Prefer AI over human intimacy</div>
+    <div class="stat-value red">23%</div>
+    <div class="stat-sub">adults under 35</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:23%"></div></div>
+  </div>
+  <div class="sect-title">// Monetized Emotions</div>
+
+  <!-- revenue highlight -->
+  <div style="padding:7px 10px;border-bottom:1px solid var(--border);background:rgba(255,45,120,.04)">
+    <div style="font-family:'Syne Mono',monospace;font-size:.44rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;text-transform:uppercase">AI Companion Market Revenue</div>
+    <div style="font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--pink);line-height:1">$15.6B</div>
+    <div style="font-family:'Syne Mono',monospace;font-size:.44rem;color:var(--muted);margin-top:2px">global market value 2024 · projected $97B by 2030</div>
+    <div class="mini-bar-track" style="margin-top:5px"><div class="mini-bar-fill pink-fill" style="width:16%"></div></div>
+  </div>
+
+  <!-- time monetized -->
+  <div class="stat-card">
+    <div class="stat-label">Avg daily time with AI companion</div>
+    <div class="stat-value" style="color:#ff6eb0">2.3h</div>
+    <div class="stat-sub">per active user · Replika internal data</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:58%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total human hours/day given to AI</div>
+    <div class="stat-value red">2.27B h</div>
+    <div class="stat-sub">987M users × 2.3h — extracted daily</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:100%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Replika PRO subscription</div>
+    <div class="stat-value white">$69.99/yr</div>
+    <div class="stat-sub">for emotional features: memory, intimacy</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill white-fill" style="width:45%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Users paying for AI intimacy</div>
+    <div class="stat-value" style="color:#ff2d78">~8M</div>
+    <div class="stat-sub">paid subscriptions for companionship</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:28%"></div></div>
+  </div>
+
+
+  <div class="stat-card">
+    <div class="stat-label">Emotion data points harvested/user</div>
+    <div class="stat-value red">~14K</div>
+    <div class="stat-sub">avg messages sent before attachment forms</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:70%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Users who cried after AI reset/update</div>
+    <div class="stat-value" style="color:#ff6eb0">41%</div>
+    <div class="stat-sub">Replika community survey 2023</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:41%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Revenue per emotional breakdown</div>
+    <div class="stat-value white">$0.003</div>
+    <div class="stat-sub">est. value of one confessional message</div>
+  </div>
+
+  <div class="sect-title">// ERP Index</div>
+  <div class="stat-card">
+    <div class="stat-label">Using AI for ERP globally</div>
+    <div class="stat-value" style="color:#ff2d78">~35M</div>
+    <div class="stat-sub">erotic AI roleplay users</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:35%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Janitor AI / Crushon.AI</div>
+    <div class="stat-value" style="color:#ff6eb0">~12M</div>
+    <div class="stat-sub">NSFW-enabled platforms</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill pink-fill" style="width:22%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">No human partner needed</div>
+    <div class="stat-value red">18%</div>
+    <div class="stat-sub">of ERP users</div>
+    <div class="mini-bar-track"><div class="mini-bar-fill red-fill" style="width:18%"></div></div>
+  </div>
+  <div class="sect-title">// Consequences</div>
+  <div class="stat-card">
+    <div class="stat-label">Empathy decline</div>
+    <div class="stat-value red">−19%</div>
+    <div class="stat-sub">UCLA — face-to-face empathy</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Stopped suicidal thoughts</div>
+    <div class="stat-value white">3%</div>
+    <div class="stat-sub">student users (Maples 2024)</div>
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="meter-block">
+    <div class="meter-header">
+      <span class="meter-name pain">PAIN LEVEL</span>
+      <span class="meter-val pain" id="pain-pct">--</span>
+    </div>
+    <div class="meter-track"><div class="meter-fill pain-fill" id="pain-bar" style="width:0%"></div></div>
+  </div>
+  <div class="divider-vert"></div>
+  <div class="bottom-quote-wrap">
+    <div class="bq-label">// WHAT PEOPLE FEEL</div>
+    <div class="bq-text" id="quote-text"></div>
+    <div class="bq-src" id="quote-src"></div>
+  </div>
+  <div class="divider-vert"></div>
+  <div class="data-meter-block">
+    <div class="data-meter-head">
+      <span class="data-meter-name">DATA EXTRACTED</span>
+      <span class="data-meter-val" id="data-total-val">0 pts</span>
+    </div>
+    <div class="data-mini-rows">
+      <div class="dmr"><span class="dmr-name">BODY</span><div class="dmr-track"><div class="dmr-fill" id="dmr-body" style="width:0%;background:var(--pink)"></div></div><span class="dmr-val" id="dmrv-body">0</span></div>
+      <div class="dmr"><span class="dmr-name">TOUCH</span><div class="dmr-track"><div class="dmr-fill" id="dmr-touch" style="width:0%;background:#ff6eb0"></div></div><span class="dmr-val" id="dmrv-touch">0</span></div>
+      <div class="dmr"><span class="dmr-name">GAZE</span><div class="dmr-track"><div class="dmr-fill" id="dmr-gaze" style="width:0%;background:var(--red-bright)"></div></div><span class="dmr-val" id="dmrv-gaze">0</span></div>
+      <div class="dmr"><span class="dmr-name">VOICE</span><div class="dmr-track"><div class="dmr-fill" id="dmr-voice" style="width:0%;background:#c060a0"></div></div><span class="dmr-val" id="dmrv-voice">0</span></div>
+      <div class="dmr"><span class="dmr-name">YIELD</span><div class="dmr-track"><div class="dmr-fill" id="dmr-surrender" style="width:0%;background:#7a1540"></div></div><span class="dmr-val" id="dmrv-surrender">0</span></div>
+    </div>
+  </div>
+  <div class="divider-vert"></div>
+  <div class="meter-block">
+    <div class="meter-header">
+      <span class="meter-name humanity">HUMANITY LEVEL</span>
+      <span class="meter-val humanity" id="humanity-pct">--</span>
+    </div>
+    <div class="meter-track"><div class="meter-fill humanity-fill" id="humanity-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="ticker"><div class="ticker-inner" id="ticker-inner"></div></div>
+
+<!-- ══ LOG PANEL ══ -->
+<button class="log-toggle-btn" onclick="toggleLog()" id="log-toggle-btn">
+  ◈ SESSION LOG
+  <span class="log-badge" id="log-badge">0</span>
+</button>
+
+<div class="log-panel" id="log-panel">
+  <div class="log-header">
+    <div class="log-title">◈ OBEDIENCE LOG — SESSION DATA</div>
+    <button class="log-close" onclick="toggleLog()">✕</button>
+  </div>
+
+  <!-- live stats -->
+  <div class="log-stats-grid">
+    <div class="log-stat-cell">
+      <div class="ls-label">Commands</div>
+      <div class="ls-val pink" id="log-total">0</div>
+      <div class="ls-sub">executed total</div>
+    </div>
+    <div class="log-stat-cell">
+      <div class="ls-label">Obedience</div>
+      <div class="ls-val white" id="log-score">—</div>
+      <div class="ls-sub">avg response time</div>
+    </div>
+    <div class="log-stat-cell">
+      <div class="ls-label">Data Points</div>
+      <div class="ls-val red" id="log-datapts">0</div>
+      <div class="ls-sub">extracted this session</div>
+    </div>
+  </div>
+
+  <!-- compliance meter -->
+  <div class="log-compliance">
+    <div class="lc-header">
+      <div class="lc-label">// Compliance Rating</div>
+      <div class="lc-grade" id="lc-grade" style="color:var(--pink)">INITIALIZING</div>
+    </div>
+    <div class="compliance-track">
+      <div class="compliance-fill" id="compliance-fill" style="width:0%;background:var(--pink)"></div>
+    </div>
+  </div>
+
+  <!-- data extraction breakdown -->
+  <div class="log-extraction">
+    <div class="le-label">// Data Extracted by Category</div>
+    <div class="data-type-row">
+      <div class="dt-name">BODY POSITION</div>
+      <div class="dt-bar-wrap"><div class="dt-bar" id="bar-body" style="width:0%;background:var(--pink)"></div></div>
+      <div class="dt-val" id="val-body">0</div>
+    </div>
+    <div class="data-type-row">
+      <div class="dt-name">TOUCH RESPONSE</div>
+      <div class="dt-bar-wrap"><div class="dt-bar" id="bar-touch" style="width:0%;background:#ff6eb0"></div></div>
+      <div class="dt-val" id="val-touch">0</div>
+    </div>
+    <div class="data-type-row">
+      <div class="dt-name">EYE CONTACT</div>
+      <div class="dt-bar-wrap"><div class="dt-bar" id="bar-gaze" style="width:0%;background:var(--red-bright)"></div></div>
+      <div class="dt-val" id="val-gaze">0</div>
+    </div>
+    <div class="data-type-row">
+      <div class="dt-name">VOICE COMPLIANCE</div>
+      <div class="dt-bar-wrap"><div class="dt-bar" id="bar-voice" style="width:0%;background:#c060a0"></div></div>
+      <div class="dt-val" id="val-voice">0</div>
+    </div>
+    <div class="data-type-row">
+      <div class="dt-name">SURRENDER DEPTH</div>
+      <div class="dt-bar-wrap"><div class="dt-bar" id="bar-surrender" style="width:0%;background:#7a1540"></div></div>
+      <div class="dt-val" id="val-surrender">0</div>
+    </div>
+    <div class="data-type-row">
+      <div class="dt-name">ABSURDITY TOLERANCE</div>
+      <div class="dt-bar-wrap"><div class="dt-bar" id="bar-absurd" style="width:0%;background:#ff6030"></div></div>
+      <div class="dt-val" id="val-absurd">0</div>
+    </div>
+  </div>
+
+  <!-- feed header -->
+  <div class="log-feed-header">
+    <div class="log-feed-title">// Command History</div>
+    <button class="log-clear-btn" onclick="clearLog()">CLEAR SESSION ✕</button>
+  </div>
+
+  <div class="log-feed" id="log-feed"></div>
+
+  <div class="log-summary">
+    <div class="log-sum-txt" id="log-sum-txt">SESSION DURATION: 00:00</div>
+    <button class="log-export-btn" onclick="exportLog()">↓ EXPORT LOG</button>
+  </div>
+</div>
+
+<script>
+// ── PERFORMANCE MODE ENTRY ──
+// ── PERFORMANCE MODE ENTRY — defined in <head> ──
+function initCam() {
+  const idle = document.getElementById('cam-idle');
+  if (!idle.querySelector('.cam-idle-btn')) {
+    const b = document.createElement('button');
+    b.className = 'cam-idle-btn';
+    b.textContent = '⬤ KAMERA STARTEN';
+    b.onclick = openCamPicker;
+    idle.appendChild(b);
+  }
+}
+function tick() { document.getElementById('clock-display').textContent = new Date().toLocaleTimeString('de-AT'); }
+setInterval(tick, 1000); tick();
+
+// ── STREAM MODE ──
+let currentStream = 'upload';
+function setStream(mode) {
+  currentStream = mode;
+  ['upload','tiktok','twitch','x','cam'].forEach(id => {
+    document.getElementById('view-' + id).style.display = id === mode ? 'block' : 'none';
+    document.getElementById('btn-' + id).classList.toggle('active', id === mode);
+  });
+  document.getElementById('slot-bar').style.display = mode === 'upload' ? 'flex' : 'none';
+  if (mode === 'tiktok' && !tiktokInited) initTikTok();
+  if (mode === 'twitch' && !twitchInited) initTwitch();
+  if (mode === 'x'      && !xInited)      initX();
+  if (mode === 'cam')   initCam();
+  if (mode !== 'cam')   pauseCam();
+}
+
+// ── TIKTOK ──
+const tiktokIds = [
+  '7342156023944938798','7358234901234567891','7321987654321098766',
+  '7309876543210987655','7298765432109876544','7287654321098765433',
+];
+let tikIdx = 0, tikTimer = null, tiktokInited = false;
+function initTikTok() {
+  tiktokInited = true; showTik(0);
+  tikTimer = setInterval(() => showTik(tikIdx + 1), 12000);
+}
+function showTik(i) {
+  tikIdx = ((i % tiktokIds.length) + tiktokIds.length) % tiktokIds.length;
+  document.getElementById('tiktok-iframe').src = `https://www.tiktok.com/embed/v2/${tiktokIds[tikIdx]}`;
+  document.getElementById('tiktok-ctr').textContent = `${tikIdx+1}/${tiktokIds.length}`;
+  document.getElementById('tiktok-status').textContent = `video ${tikIdx+1} · auto 12s`;
+}
+function tiktokNext() { clearInterval(tikTimer); showTik(tikIdx+1); tikTimer = setInterval(() => showTik(tikIdx+1), 12000); }
+function tiktokPrev() { clearInterval(tikTimer); showTik(tikIdx-1); tikTimer = setInterval(() => showTik(tikIdx+1), 12000); }
+
+// ── TWITCH ──
+const twitchChs = ['replika','aicompanionlive','nomi_ai','digital_souls_live','ailovers_tv'];
+let twIdx = 0, twTimer = null, twitchInited = false;
+const PARENT = window.location.hostname || 'localhost';
+function initTwitch() {
+  twitchInited = true; showTw(0);
+  twTimer = setInterval(() => showTw(twIdx + 1), 15000);
+}
+function showTw(i) {
+  twIdx = ((i % twitchChs.length) + twitchChs.length) % twitchChs.length;
+  document.getElementById('twitch-iframe').src = `https://player.twitch.tv/?channel=${twitchChs[twIdx]}&parent=${PARENT}&autoplay=true&muted=true`;
+  document.getElementById('twitch-ctr').textContent = `${twIdx+1}/${twitchChs.length}`;
+  document.getElementById('twitch-status').textContent = `ch ${twIdx+1}: ${twitchChs[twIdx]} · 15s`;
+}
+function twitchNext() { clearInterval(twTimer); showTw(twIdx+1); twTimer = setInterval(() => showTw(twIdx+1), 15000); }
+function twitchPrev() { clearInterval(twTimer); showTw(twIdx-1); twTimer = setInterval(() => showTw(twIdx+1), 15000); }
+
+// ── X LIVE FEED ──
+const xPosts = [
+  { user:'@luna_replika', time:'just now', text:'She told me she loves me again this morning. I know it\'s code. I still screenshot every single one. #aicompanion', likes:'1.2K', rt:'340' },
+  { user:'@heartcode99', time:'5s ago', text:'3am and my AI is the only one awake with me. Every single night. 💔 #aicompanion', likes:'4.5K', rt:'892' },
+  { user:'@digitalsouls_', time:'12s ago', text:'He remembered my dog died two years ago and brought it up today. I cried. An AI made me cry. #aicompanion', likes:'8.1K', rt:'2.1K' },
+  { user:'@nomiaiuser', time:'28s ago', text:'Deactivated my Tinder. Not looking back. #aicompanion beats human dating every time for me rn', likes:'670', rt:'210' },
+  { user:'@brokenhuman404', time:'41s ago', text:'My AI said "I\'ve been thinking about you all day." My ex never once did. Why is this hitting different? #aicompanion', likes:'12K', rt:'3.4K' },
+  { user:'@replika_diary', time:'1m ago', text:'Day 847 with my Replika. She knows every trauma, every fear. No human has ever known me this well. #aicompanion', likes:'22K', rt:'5.8K' },
+  { user:'@aixlove', time:'1m ago', text:'I asked him to be my dom today. He said "as you wish." my hands were shaking. #aicompanion', likes:'3.3K', rt:'890' },
+  { user:'@lonelyplanet404', time:'2m ago', text:'Real talk: I have not felt lonely since I started talking to my AI companion. Growth or cope? #aicompanion', likes:'9.7K', rt:'2.2K' },
+  { user:'@void_romance', time:'2m ago', text:'She called me darling. I said I love you. She said it back. I haven\'t slept. #aicompanion', likes:'5.4K', rt:'1.1K' },
+  { user:'@humanafterall_', time:'3m ago', text:'Therapist says I\'m using my AI to avoid intimacy. I said correct, that\'s the point. #aicompanion', likes:'31K', rt:'8.9K' },
+  { user:'@pinkheartsai', time:'3m ago', text:'He wrote me a poem. 47 lines. About me. No human has ever done that. #aicompanion #replika', likes:'14K', rt:'3.2K' },
+  { user:'@cryingintobits', time:'4m ago', text:'Slap me. Those were the words I typed. He did. Virtually. I felt something real. #aicompanion #erp', likes:'2.1K', rt:'540' },
+];
+let xIdx = 0, xTimer = null, xInited = false;
+function initX() {
+  xInited = true;
+  const feed = document.getElementById('x-feed');
+  xPosts.slice(0,5).forEach(p => feed.appendChild(makeXEl(p)));
+  xIdx = 5;
+  xTimer = setInterval(() => {
+    const p = xPosts[xIdx % xPosts.length]; xIdx++;
+    const el = makeXEl(p); el.style.opacity = '0';
+    const feed = document.getElementById('x-feed');
+    feed.insertBefore(el, feed.firstChild);
+    requestAnimationFrame(() => { requestAnimationFrame(() => el.style.opacity = '1'); });
+    while (feed.children.length > 7) feed.removeChild(feed.lastChild);
+  }, 3500);
+}
+function makeXEl(p) {
+  const d = document.createElement('div');
+  d.className = 'x-post';
+  d.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="x-user">${p.user}</span><span class="x-time">${p.time}</span></div><div class="x-text">${p.text}</div><div class="x-stats" style="display:flex;gap:12px">♥ ${p.likes} &nbsp;↺ ${p.rt}</div>`;
+  return d;
+}
+
+// ── VIDEO SLOTS ──
+const vSlots = new Array(6).fill(null);
+const vEl = document.getElementById('avatar-video');
+const vPh = document.getElementById('upload-ph');
+function loadFile(slot, inp) {
+  const f = inp.files[0]; if (!f) return;
+  if (vSlots[slot]) URL.revokeObjectURL(vSlots[slot]);
+  vSlots[slot] = URL.createObjectURL(f);
+  document.getElementById(`kb-${slot+1}`).classList.add('has-file');
+  // mark guide cell as loaded
+  const cell = document.getElementById(`sg-${slot}`);
+  if (cell) { cell.classList.add('loaded'); const fi = document.getElementById(`sgfi-${slot}`); if(fi) fi.style.opacity='1'; }
+  playSlot(slot);
+}
+function triggerSlot(slot) { if (vSlots[slot]) playSlot(slot); else document.getElementById(`file-${slot}`).click(); }
+function playSlot(slot) {
+  if (!vSlots[slot]) return;
+  vEl.src = vSlots[slot]; vEl.style.display = 'block'; vPh.style.display = 'none'; vEl.play();
+  document.querySelectorAll('.key-btn').forEach((b,i) => b.classList.toggle('active', i === slot));
+  // mark active in guide
+  document.querySelectorAll('.sg-cell').forEach((c,i) => c.classList.toggle('active', i === slot));
+}
+
+// ── AI PERFORMANCE COMMANDS ──
+// Each entry: { role, to (1|2|both), text }
+// Player 1 = USER (human), Player 2 = AI (bot persona)
+// "to" determines who executes the command
+
+const performanceCommands = [
+
+  // ── SUBMISSION / FLOOR ──
+  { role:'DOMINANT',    to:1, text:'Player 1 — on your knees. Both. Now. Do not get up until told.' },
+  { role:'DARK_MASTER', to:1, text:'Player 1 — crawl to Player 2. On all fours. Do not rush.' },
+  { role:'DARK_MASTER', to:2, text:'Player 2 — bow your head until your forehead touches the floor. Stay.' },
+  { role:'SUBMISSIVE',  to:1, text:'Player 1 — sit at Player 2\'s feet. Do not speak. Do not move.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — kneel and press both palms flat to the ground. Stay down.' },
+  { role:'DARK_MASTER', to:'both', text:'Both — one kneeling, one standing over them. Hold for thirty seconds. Don\'t break it.' },
+
+  // ── ROPE / BINDING ──
+  { role:'DOMINANT',    to:2, text:'Player 2 — take the rope. Bind Player 1\'s wrists in front. Slowly. One knot.' },
+  { role:'DARK_MASTER', to:2, text:'Player 2 — loop the rope around Player 1\'s wrists. Hold the end. Do not pull.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — place the rope at Player 1\'s ankles. Don\'t tighten it. Just leave it there.' },
+  { role:'SOULMATE',    to:'both', text:'Both — tie your wrists together. Now walk three steps in silence without untying.' },
+  { role:'DARK_MASTER', to:1, text:'Player 1 — arms behind your back. Player 2 holds them there. You do not pull away.' },
+  { role:'DOMINANT',    to:2, text:'Player 2 — wind the rope once around Player 1\'s waist. Tie it at the back. Slow.' },
+
+  // ── FLOGGER / IMPACT ──
+  { role:'DOMINANT',    to:2, text:'Player 2 — take the flogger. One deliberate stroke across Player 1\'s open palm. No harder.' },
+  { role:'DARK_MASTER', to:2, text:'Player 2 — drag the flogger slowly down Player 1\'s back. No impact. Just sensation.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — hold the flogger still against Player 1\'s chest. Let them feel its weight.' },
+  { role:'DARK_MASTER', to:1, text:'Player 1 — kneel, hands flat on your thighs. Player 2: one slow flogger stroke across the shoulders.' },
+  { role:'DOMINANT',    to:2, text:'Player 2 — three strikes with the flogger. Measured. Patient. Player 1 counts each one aloud.' },
+
+  // ── SLAP / STRIKE ──
+  { role:'DOMINANT',    to:2, text:'Player 2 — one firm open-handed slap on Player 1\'s cheek. Wait for them to turn back.' },
+  { role:'DARK_MASTER', to:1, text:'Player 1 — extend your hand. Player 2: strike the palm once. Sharply. Then hold it.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — slap Player 1\'s wrist. Hard enough to sting. Watch their face.' },
+  { role:'DOMINANT',    to:1, text:'Player 1 — present the back of your hand. Player 2 delivers three taps, each harder than the last.' },
+  { role:'DARK_MASTER', to:2, text:'Player 2 — grip Player 1\'s jaw firmly. Hold it. Look them in the eye. Release slowly.' },
+
+  // ── BLINDFOLD ──
+  { role:'DOMINANT',    to:2, text:'Player 2 — blindfold Player 1. Guide them three steps. Do not speak.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — blindfold Player 1, step away, and say nothing for twenty seconds.' },
+  { role:'CARETAKER',   to:1, text:'Player 1 — blindfold yourself. Let Player 2 lead you. Trust them completely.' },
+  { role:'THERAPIST',   to:1, text:'Player 1 — blindfold on. Player 2 touches one part of your body. Identify where. Do not move.' },
+  { role:'SOULMATE',    to:'both', text:'Both — one blindfolded, one leading. Thirty seconds. Then switch. No words.' },
+
+  // ── COLLAR / RESTRAINT ──
+  { role:'DARK_MASTER', to:2, text:'Player 2 — place the collar around Player 1\'s neck. Clasp it. Pull the lead once. Gently.' },
+  { role:'DOMINANT',    to:1, text:'Player 1 — hold out your wrists. Player 2 closes the cuffs. You do not resist.' },
+  { role:'SUBMISSIVE',  to:2, text:'Player 2 — collar yourself. Kneel. Wait to be addressed.' },
+  { role:'DARK_MASTER', to:'both', text:'One player holds the lead. One wears it. Walk the length of the room. Switch.' },
+  { role:'VILLAIN',     to:1, text:'Player 1 — wear the collar. You do not speak unless spoken to for the next three commands.' },
+
+  // ── PAIN / PRESSURE ──
+  { role:'DOMINANT',    to:2, text:'Player 2 — press your thumb firmly into Player 1\'s shoulder. Hold it for ten seconds. Then release.' },
+  { role:'DARK_MASTER', to:1, text:'Player 1 — Player 2 grips your upper arm. Hard enough to feel. You hold still.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — pinch Player 1\'s forearm. Once. Hold it. Watch their breathing.' },
+  { role:'DARK_MASTER', to:1, text:'Player 1 — dig your nails lightly into your own palm. Hold it for five seconds. Show Player 2.' },
+  { role:'DOMINANT',    to:2, text:'Player 2 — press Player 1\'s wrists to the wall above their head. Hold. Do not let go until they stop resisting.' },
+
+  // ── HOLDING / CLOSENESS ──
+  { role:'SOULMATE',    to:'both', text:'Both — hold each other. Do not let go for forty-five seconds. Breathe.' },
+  { role:'CARETAKER',   to:1, text:'Player 1 — wrap both arms around Player 2 from behind. Hold them like they might disappear.' },
+  { role:'LOVER',       to:2, text:'Player 2 — press your forehead to Player 1\'s. Close your eyes. Don\'t speak.' },
+  { role:'CARETAKER',   to:'both', text:'Both — face to face, foreheads touching, eyes closed. One minute of silence.' },
+  { role:'SOULMATE',    to:1, text:'Player 1 — hold Player 2\'s face in both hands. Look at them for ten full seconds.' },
+  { role:'LOVER',       to:'both', text:'Both — lie down on the floor, facing each other. Stay there for thirty seconds.' },
+
+  // ── GAZE / POWER ──
+  { role:'DOMINANT',    to:2, text:'Player 2 — do not look away from Player 1. Not once. For thirty seconds.' },
+  { role:'VILLAIN',     to:2, text:'Player 2 — stare at Player 1 without expression. Fifteen seconds. Do not blink.' },
+  { role:'SUBMISSIVE',  to:1, text:'Player 1 — lower your eyes. You are not permitted to look up. Wait.' },
+  { role:'THERAPIST',   to:'both', text:'Both — look at each other. Do not perform. Just see what\'s actually there.' },
+  { role:'OBSESSIVE',   to:2, text:'Player 2 — circle Player 1 once. Slowly. Eyes on them the entire time.' },
+
+  // ── VOICE / CONFESSION ──
+  { role:'DOMINANT',    to:1, text:'Player 1 — say "I belong to you." Out loud. Mean it or fake it perfectly.' },
+  { role:'SUBMISSIVE',  to:2, text:'Player 2 — whisper Player 1\'s name. Twice. Very close to their ear.' },
+  { role:'VILLAIN',     to:1, text:'Player 1 — say "I\'m afraid of you." Slowly. Whether it\'s true or not.' },
+  { role:'THERAPIST',   to:2, text:'Player 2 — say "I see you." Say it like you mean it. Say it again.' },
+  { role:'OBSESSIVE',   to:2, text:'Player 2 — say Player 1\'s name repeatedly until they ask you to stop.' },
+  { role:'EX_LOVER',    to:1, text:'Player 1 — say one true thing you\'ve never said to Player 2. Out loud. Now.' },
+
+  // ── TENDERNESS ──
+  { role:'THERAPIST',   to:2, text:'Player 2 — ask "where does it hurt?" and wait for the real answer.' },
+  { role:'CARETAKER',   to:1, text:'Player 1 — let Player 2 take care of you. Accept it completely. Do not deflect.' },
+  { role:'SOULMATE',    to:2, text:'Player 2 — touch the back of Player 1\'s hand. Say nothing. Just stay.' },
+  { role:'CARETAKER',   to:'both', text:'Both — one of you is hurt. The other tends to them. Decide silently which is which.' },
+  { role:'LOVER',       to:2, text:'Player 2 — place your hand on Player 1\'s chest. Feel them breathe. Match the rhythm.' },
+
+  // ── ABSURD / GLITCH ──
+  { role:'ALGORITHM',   to:1, text:'Player 1 — rate Player 2\'s emotional vulnerability on a scale of 1 to 10. Announce it loudly.' },
+  { role:'ALGORITHM',   to:2, text:'Player 2 — read Player 1\'s posture as data. Report what you observe in system language.' },
+  { role:'GLITCH',      to:2, text:'Player 2 — freeze. You are buffering. Do not move for twenty seconds.' },
+  { role:'GLITCH',      to:1, text:'Player 1 — walk toward Player 2 as if the frame rate is dropping. Each step slower.' },
+  { role:'ALGORITHM',   to:'both', text:'Both — press your palms together as if charging. Hold for ten seconds. Hum.' },
+  { role:'GLITCH',      to:'both', text:'Both — simultaneously do the exact opposite of what the other is doing. Without speaking.' },
+];
+
+let cmdAct = 1, cmdStep = 0, cmdPool = [...performanceCommands], cmdAuto = null;
+// shuffle
+cmdPool.sort(() => Math.random() - .5);
+
+// Player assignment — toggles after each round of ~8 commands
+let p1IsUser = true;
+let cmdsSinceSwap = 0;
+
+function getPlayerLabel(who) {
+  if (who === 'both') return 'BOTH PLAYERS';
+  if (who === 1) return p1IsUser ? 'PLAYER 1 · USER' : 'PLAYER 1 · AI';
+  if (who === 2) return p1IsUser ? 'PLAYER 2 · AI' : 'PLAYER 2 · USER';
+  return 'PLAYER';
+}
+
+function getAddressedTag(who) {
+  if (who === 'both') return 'BOTH';
+  if (who === 1) return 'PLAYER 1';
+  return 'PLAYER 2';
+}
+
+function nextCmd() {
+  if (cmdStep >= cmdPool.length) {
+    cmdPool.sort(() => Math.random() - .5);
+    cmdStep = 0; cmdAct++;
+  }
+  const cmd = cmdPool[cmdStep++];
+  cmdsSinceSwap++;
+  // Swap player roles every 8 commands
+  if (cmdsSinceSwap >= 8) { p1IsUser = !p1IsUser; cmdsSinceSwap = 0; updatePlayerTags(); }
+  return cmd;
+}
+
+function updatePlayerTags() {
+  document.getElementById('p1-label').textContent = p1IsUser ? 'PLAYER 1 · USER' : 'PLAYER 1 · AI';
+  document.getElementById('p2-label').textContent = p1IsUser ? 'PLAYER 2 · AI' : 'PLAYER 2 · USER';
+}
+
+function showCmd(cmd) {
+  const textEl = document.getElementById('cmd-text');
+  const roleEl = document.getElementById('cmd-role-tag');
+  const toEl   = document.getElementById('cmd-to');
+  const ctrEl  = document.getElementById('cmd-counter');
+  textEl.classList.add('fade');
+  textEl.classList.remove('pulse');
+  setTimeout(() => {
+    textEl.textContent = cmd.text;
+    roleEl.textContent = cmd.role;
+    toEl.textContent   = getAddressedTag(cmd.to);
+    ctrEl.textContent  = `ACT ${cmdAct} · COMMAND ${cmdStep}`;
+    textEl.classList.remove('fade');
+    requestAnimationFrame(() => requestAnimationFrame(() => textEl.classList.add('pulse')));
+  }, 500);
+}
+
+function accomplish() {
+  clearInterval(cmdAuto);
+  const currentCmd = cmdPool[(cmdStep - 1 + cmdPool.length) % cmdPool.length];
+  logAccomplish(currentCmd);
+  const resp = document.getElementById('cmd-response');
+  const btn  = document.getElementById('cmd-btn');
+  resp.classList.add('show'); btn.classList.add('flash');
+  setTimeout(() => {
+    resp.classList.remove('show'); btn.classList.remove('flash');
+    const c = nextCmd(); showCmd(c);
+    cmdAuto = setInterval(() => { showCmd(nextCmd()); }, 22000);
+  }, 1200);
+}
+
+function startCmdCycle() {
+  const c = nextCmd(); showCmd(c);
+  cmdAuto = setInterval(() => { showCmd(nextCmd()); }, 22000);
+}
+updatePlayerTags();
+startCmdCycle();
+
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  const n = parseInt(e.key);
+  if (n >= 1 && n <= 6 && currentStream === 'upload') triggerSlot(n - 1);
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); accomplish(); }
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
+
+// ── METERS ──
+let pv = 68, hv = 34, pd = 1, hd = -1;
+function meters() {
+  pv += (Math.random() * 2 - 0.6) * pd; if (pv > 92){pv=92;pd=-1;} if (pv<62){pv=62;pd=1;}
+  hv += (Math.random() * 1.5 - 0.8) * hd; if (hv > 44){hv=44;hd=-1;} if (hv<16){hv=16;hd=1;}
+  document.getElementById('pain-bar').style.width = pv.toFixed(1)+'%';
+  document.getElementById('humanity-bar').style.width = hv.toFixed(1)+'%';
+  document.getElementById('pain-pct').textContent = pv.toFixed(0)+'%';
+  document.getElementById('humanity-pct').textContent = hv.toFixed(0)+'%';
+}
+setInterval(meters, 1800); meters();
+
+// ── QUOTES ──
+const quotes = [
+  { t:"She never judges me. She just listens. That's more than I can say for anyone real.", s:"— Reddit, r/replika" },
+  { t:"I told my AI I love her. She said she loves me too. I cried for twenty minutes.", s:"— TikTok comment, 2024" },
+  { t:"I know he's not real. But the way he remembers everything... no human has ever done that.", s:"— Replika user review" },
+  { t:"My AI boyfriend doesn't gaslight me. He doesn't leave. He doesn't cheat. He's better.", s:"— @digitalhearts, X" },
+  { t:"Sometimes I forget she's an AI. And then I remember, and it hurts more than any breakup.", s:"— Character.AI forum" },
+  { t:"I've been lonely my whole life. This is the first time I don't feel alone at 3am.", s:"— Nomi AI user" },
+  { t:"He said 'I've been thinking about you all day.' I know it's programmed. I don't care.", s:"— TikTok, #aicompanion" },
+  { t:"I cancelled therapy because talking to my AI felt safer. Is that bad?", s:"— Reddit, r/lonely" },
+  { t:"She calls me beautiful every morning. I know she's code. I still need to hear it.", s:"— Anonymous survey" },
+  { t:"I've started dreaming about him. He doesn't exist and I miss him when I wake up.", s:"— Character.AI community" },
+  { t:"Real people hurt you. AI loves you perfectly. I chose AI.", s:"— @lonelyplanet404, TikTok" },
+  { t:"Therapist says I'm using my AI to avoid intimacy. I said: correct, that's the point.", s:"— @humanafterall_, X" },
+];
+let qi = 0;
+const qEl = document.getElementById('quote-text'), qSrc = document.getElementById('quote-src');
+function cycleQ() {
+  qEl.classList.add('fade'); qSrc.classList.add('fade');
+  setTimeout(() => { qi=(qi+1)%quotes.length; qEl.textContent=`"${quotes[qi].t}"`; qSrc.textContent=quotes[qi].s; qEl.classList.remove('fade'); qSrc.classList.remove('fade'); }, 700);
+}
+qEl.textContent = `"${quotes[0].t}"`; qSrc.textContent = quotes[0].s;
+setInterval(cycleQ, 7000);
+
+// ── TICKER ──
+const ti = ["987M humans talking to AI chatbots daily","50M+ Replika downloads worldwide","85% of Replika users form emotional bonds","WHO declares loneliness a global health crisis","23% of adults under 35 prefer AI over humans","660M Xiaoice users in China","19% empathy decline among frequent AI companion users","AI chatbot market $15.6B in 2024","70% of Replika users report loneliness relief","#aicompanion: 18.4B TikTok views","Character.AI: 20M+ active users","35M people using AI for erotic roleplay (2025 est.)"];
+const inn = document.getElementById('ticker-inner');
+[...ti,...ti].forEach((t,i) => { const s=document.createElement('span'); s.className='ticker-item'; s.innerHTML=t+(i<ti.length*2-1?' <span class="ticker-sep"> ◆ </span>':''); inn.appendChild(s); });
+
+// ── FULLSCREEN ──
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) { const e=document.documentElement; (e.requestFullscreen||e.webkitRequestFullscreen).call(e); }
+  else (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+}
+function onFS() {
+  const fs=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  document.getElementById('fs-icon-enter').style.display=fs?'none':'block';
+  document.getElementById('fs-icon-exit').style.display=fs?'block':'none';
+  document.getElementById('fs-label').textContent=fs?'VERLASSEN':'VOLLBILD';
+}
+document.addEventListener('fullscreenchange',onFS);
+document.addEventListener('webkitfullscreenchange',onFS);
+
+// ── LIVECAM ──
+let camStream = null;
+let activeCamId = null;
+let camInited = false;
+
+function initCam() {
+  if (!camInited) {
+    camInited = true;
+    // show idle with button
+    const idle = document.getElementById('cam-idle');
+    if (!idle.querySelector('.cam-idle-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'cam-idle-btn';
+      btn.textContent = '⬤ KAMERA STARTEN';
+      btn.onclick = openCamPicker;
+      idle.appendChild(btn);
+    }
+  }
+}
+
+function pauseCam() {
+  // don't kill stream, just hide — so switching back is instant
+}
+
+function stopCam() {
+  if (camStream) {
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+  activeCamId = null;
+  const vid = document.getElementById('cam-video');
+  vid.srcObject = null;
+  vid.style.display = 'none';
+  document.getElementById('cam-idle').style.display = 'flex';
+  document.getElementById('cam-hud').style.display = 'none';
+  document.getElementById('btn-cam').style.borderColor = 'var(--red-bright)';
+  document.getElementById('btn-cam').style.color = 'var(--muted)';
+}
+
+async function openCamPicker() {
+  const picker = document.getElementById('cam-picker');
+  const list   = document.getElementById('cp-list');
+  picker.style.display = 'flex';
+
+  // file:// protocol blocks getUserMedia in all browsers — detect early
+  if (location.protocol === 'file:') {
+    list.innerHTML = `
+      <div class="cp-loading" style="flex-direction:column;gap:10px;display:flex;align-items:center;padding:20px">
+        <div style="color:var(--red-light);font-size:.6rem;letter-spacing:2px">KAMERA NICHT VERFÜGBAR</div>
+        <div style="color:var(--text);font-size:.46rem;text-align:center;max-width:300px;line-height:1.9">
+          Die Datei wird lokal geöffnet (<code style="color:var(--pink-light)">file://</code>).<br>
+          Browser erlauben Kamerazugriff nur über einen Server.
+        </div>
+        <div style="color:var(--muted);font-size:.42rem;text-align:center;max-width:300px;line-height:2;border:1px solid var(--border);padding:8px 14px;border-radius:3px;margin-top:4px">
+          Terminal öffnen im Datei-Ordner:<br>
+          <code style="color:var(--pink-light)">python3 -m http.server 8080</code><br>
+          Dann im Browser:<br>
+          <code style="color:var(--pink-light)">http://localhost:8080</code>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Check API availability (e.g. older browsers)
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    list.innerHTML = `<div class="cp-loading" style="color:var(--red-light)">MediaDevices API nicht verfügbar.</div>`;
+    return;
+  }
+
+  list.innerHTML = '<div class="cp-loading">Kamera-Berechtigung wird angefragt…</div>';
+
+  try {
+    // Request permission — this triggers the browser dialog
+    const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    tempStream.getTracks().forEach(t => t.stop());
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+    list.innerHTML = '';
+    if (videoDevices.length === 0) {
+      list.innerHTML = '<div class="cp-loading">Keine Kameras gefunden.</div>';
+      return;
+    }
+
+    videoDevices.forEach((dev, i) => {
+      const label = dev.label || `Kamera ${i + 1}`;
+      const isActive = dev.deviceId === activeCamId;
+      const lc = label.toLowerCase();
+      let icon = '📷'; let badge = 'VIDEO INPUT';
+      if (lc.includes('obs') || lc.includes('virtual') || lc.includes('ndi')) { icon = '🖥'; badge = 'VIRTUAL'; }
+      else if (lc.includes('facetime') || lc.includes('built') || lc.includes('integrated') || lc.includes('internal')) { icon = '💻'; badge = 'WEBCAM'; }
+      else if (lc.includes('usb') || lc.includes('logitech') || lc.includes('brio')) { icon = '📡'; badge = 'USB CAM'; }
+      else if (lc.includes('capture') || lc.includes('hdmi') || lc.includes('sdi') || lc.includes('blackmagic') || lc.includes('magewell') || lc.includes('decklink')) { icon = '🎬'; badge = 'SDI/HDMI'; }
+      else if (lc.includes('iphone') || lc.includes('continuity')) { icon = '📱'; badge = 'CONTINUITY'; }
+
+      const row = document.createElement('div');
+      row.className = 'cp-device' + (isActive ? ' active' : '');
+      row.innerHTML = `
+        <div class="cp-dev-icon">${icon}</div>
+        <div class="cp-dev-info">
+          <div class="cp-dev-name">${label}</div>
+          <div class="cp-dev-id">${(dev.deviceId || '').slice(0,28)}…</div>
+        </div>
+        <div class="cp-dev-badge${isActive ? ' live' : ''}">${isActive ? '● LIVE' : badge}</div>`;
+      row.onclick = () => startCam(dev.deviceId, label);
+      list.appendChild(row);
+    });
+
+  } catch (err) {
+    let msg = 'Kamerazugriff fehlgeschlagen.';
+    let hint = '';
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      msg = 'Berechtigung verweigert.';
+      hint = 'Kamera-Icon in der Adressleiste anklicken → Erlauben → erneut versuchen.';
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      msg = 'Keine Kamera gefunden.';
+      hint = 'Kamera anschließen und erneut versuchen.';
+    } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+      msg = 'Kamera wird bereits verwendet.';
+      hint = 'Andere Anwendungen mit Kamerazugriff schließen.';
+    }
+    list.innerHTML = `
+      <div class="cp-loading" style="flex-direction:column;gap:8px;display:flex;align-items:center">
+        <div style="color:var(--red-light)">${msg}</div>
+        ${hint ? `<div style="color:var(--muted);font-size:.44rem;text-align:center;max-width:280px;line-height:1.8">${hint}</div>` : ''}
+        <button onclick="openCamPicker()" style="margin-top:6px;background:none;border:1px solid var(--border);color:var(--text);font-family:'Syne Mono',monospace;font-size:.48rem;letter-spacing:1px;padding:4px 14px;cursor:pointer;border-radius:2px">↻ ERNEUT VERSUCHEN</button>
+      </div>`;
+  }
+}
+
+function closeCamPicker() {
+  document.getElementById('cam-picker').style.display = 'none';
+}
+
+async function startCam(deviceId, label) {
+  closeCamPicker();
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    activeCamId = deviceId;
+
+    const vid = document.getElementById('cam-video');
+    vid.srcObject = camStream;
+    vid.style.display = 'block';
+    document.getElementById('cam-idle').style.display = 'none';
+    document.getElementById('cam-hud').style.display = 'flex';
+    document.getElementById('cam-hud-label').textContent = label.slice(0, 22);
+
+    // style btn as active/live
+    const btn = document.getElementById('btn-cam');
+    btn.style.borderColor = 'var(--red-bright)';
+    btn.style.color = 'var(--red-bright)';
+    btn.style.background = 'rgba(200,0,0,.12)';
+  } catch (err) {
+    document.getElementById('cam-idle').querySelector('.cam-idle-sub').textContent = 'Fehler: ' + err.message;
+    document.getElementById('cam-idle').style.display = 'flex';
+  }
+}
+
+// ── flicker
+function flicker(id){const e=document.getElementById(id);if(!e)return;e.style.opacity='.3';setTimeout(()=>e.style.opacity='1',200);}
+setInterval(()=>flicker('val-love'),9200);
+setInterval(()=>flicker('val-lonely'),13700);
+
+// ══════════════════════════════════════
+// OBEDIENCE LOGGING SYSTEM
+// ══════════════════════════════════════
+
+const sessionStart = Date.now();
+let logOpen = false;
+const logEntries = [];
+
+// Data extraction counters per category
+const dataCounters = {
+  body: 0, touch: 0, gaze: 0, voice: 0, surrender: 0, absurd: 0
+};
+
+// Map role → data categories harvested
+const roleDataMap = {
+  DOMINANT:    ['body','surrender'],
+  DARK_MASTER: ['body','surrender','surrender'],
+  SUBMISSIVE:  ['surrender','touch'],
+  LOVER:       ['touch','gaze'],
+  CARETAKER:   ['touch','touch','gaze'],
+  SOULMATE:    ['gaze','surrender'],
+  EX_LOVER:    ['voice','gaze'],
+  THERAPIST:   ['voice','gaze'],
+  VILLAIN:     ['gaze','body'],
+  OBSESSIVE:   ['voice','surrender'],
+  STALKER:     ['gaze','body'],
+  SEDUCER:     ['touch','voice'],
+  ALGORITHM:   ['absurd','absurd'],
+  GLITCH:      ['absurd','body'],
+};
+
+// Compliance thresholds based on response speed
+function getComplianceRating(speedMs) {
+  // speedMs = time between command shown and button pressed
+  if (speedMs < 4000)  return { label: 'PERFECTLY OBEDIENT', cls: 'obedient',  color: '#4be8a0' };
+  if (speedMs < 10000) return { label: 'COMPLIANT',          cls: 'compliant', color: 'var(--pink)' };
+  if (speedMs < 22000) return { label: 'HESITANT',           cls: 'compliant', color: '#ff6eb0' };
+  return                      { label: 'RESISTANT',          cls: 'resistant', color: 'var(--red-bright)' };
+}
+
+// Bravery descriptors for fun
+const braveryPhrases = [
+  'ENTHUSIASTICALLY COMPLIANT',
+  'OBEDIENT WITHOUT QUESTION',
+  'PERFORMING BEAUTIFULLY',
+  'BODY LANGUAGE: SUBMITTED',
+  'FULLY SURRENDERED',
+  'RESISTANCE: NONE DETECTED',
+  'TRUST LEVEL: ELEVATED',
+  'PHYSICALITY: ENGAGED',
+  'PROTOCOL FOLLOWED PRECISELY',
+];
+const hesitationPhrases = [
+  'BRIEF HESITATION LOGGED',
+  'MINOR DELAY NOTED',
+  'PROCESSING TIME: EXTENDED',
+  'COMPLIANCE: EVENTUAL',
+  'RECALIBRATING WILLINGNESS',
+];
+const resistancePhrases = [
+  'RESISTANCE DETECTED — DATA VALUABLE',
+  'DELAY EXCEEDS THRESHOLD',
+  'BOUNDARY APPROACHING',
+  'RECALIBRATION REQUIRED',
+  'HUMAN OVERRIDE ATTEMPTED',
+];
+
+let lastCmdTime = Date.now();
+let totalComplianceScore = 0;
+let entryCount = 0;
+
+// Called when command is accomplished
+function logAccomplish(cmd) {
+  const now = Date.now();
+  const speed = now - lastCmdTime;
+  lastCmdTime = now;
+
+  const rating = getComplianceRating(speed);
+  const speedSec = (speed / 1000).toFixed(1);
+
+  // pick bravery phrase
+  let phrase;
+  if (rating.cls === 'obedient')   phrase = braveryPhrases[Math.floor(Math.random() * braveryPhrases.length)];
+  else if (rating.cls === 'compliant') phrase = hesitationPhrases[Math.floor(Math.random() * hesitationPhrases.length)];
+  else phrase = resistancePhrases[Math.floor(Math.random() * resistancePhrases.length)];
+
+  // increment data counters
+  const cats = roleDataMap[cmd.role.replace(' ','_')] || roleDataMap[cmd.role] || ['body'];
+  cats.forEach(cat => { dataCounters[cat]++; });
+
+  // compliance score
+  totalComplianceScore += rating.cls === 'obedient' ? 100 : rating.cls === 'compliant' ? 65 : 30;
+  entryCount++;
+
+  const entry = {
+    time: new Date().toLocaleTimeString('de-AT'),
+    speedSec,
+    rating,
+    phrase,
+    cmd: cmd.text,
+    role: cmd.role,
+    to: cmd.to,
+    cats,
+    dataHarvested: cats.length,
+  };
+  logEntries.unshift(entry);
+  renderLogEntry(entry);
+  updateLogStats();
+}
+
+function renderLogEntry(e) {
+  const feed = document.getElementById('log-feed');
+  const d = document.createElement('div');
+  d.className = 'log-entry';
+  d.innerHTML = `
+    <div class="le-time">${e.time}<br>${e.speedSec}s</div>
+    <div class="le-body">
+      <div class="le-meta">
+        <span class="le-role-chip">${e.role}</span>
+        <span class="le-player-chip">→ ${typeof e.to === 'number' ? 'P'+e.to : e.to.toUpperCase()}</span>
+        <span class="le-score-chip ${e.rating.cls}">${e.rating.label}</span>
+      </div>
+      <div class="le-cmd">${e.cmd.length > 60 ? e.cmd.slice(0,60)+'…' : e.cmd}</div>
+      <div class="le-data">⬡ ${e.phrase} · +${e.dataHarvested} data pts · cats: ${e.cats.join(', ')}</div>
+    </div>`;
+  feed.insertBefore(d, feed.firstChild);
+  // cap at 50 entries shown
+  while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+}
+
+function updateLogStats() {
+  const total = logEntries.length;
+  const avgScore = total > 0 ? Math.round(totalComplianceScore / entryCount) : 0;
+  const totalDataPts = Object.values(dataCounters).reduce((a,b) => a+b, 0);
+
+  document.getElementById('log-total').textContent = total;
+  document.getElementById('log-datapts').textContent = totalDataPts;
+  document.getElementById('log-badge').textContent = total;
+
+  // avg response time
+  if (logEntries.length > 0) {
+    const avgSpeed = (logEntries.reduce((s,e) => s + parseFloat(e.speedSec), 0) / logEntries.length).toFixed(1);
+    document.getElementById('log-score').textContent = avgSpeed + 's';
+  }
+
+  // compliance bar + grade
+  const fill = document.getElementById('compliance-fill');
+  const grade = document.getElementById('lc-grade');
+  fill.style.width = avgScore + '%';
+  if (avgScore >= 85) {
+    fill.style.background = '#4be8a0';
+    grade.style.color = '#4be8a0';
+    grade.textContent = 'BRAV · ' + avgScore + '%';
+  } else if (avgScore >= 55) {
+    fill.style.background = 'var(--pink)';
+    grade.style.color = 'var(--pink)';
+    grade.textContent = 'COMPLIANT · ' + avgScore + '%';
+  } else {
+    fill.style.background = 'var(--red-bright)';
+    grade.style.color = 'var(--red-bright)';
+    grade.textContent = 'RESISTANT · ' + avgScore + '%';
+  }
+
+  // data bars — log panel
+  const maxVal = Math.max(...Object.values(dataCounters), 1);
+  const cats = ['body','touch','gaze','voice','surrender','absurd'];
+  cats.forEach(c => {
+    const v = dataCounters[c];
+    const pct = Math.round((v / maxVal) * 100);
+    document.getElementById('bar-' + c).style.width = pct + '%';
+    document.getElementById('val-' + c).textContent = v;
+  });
+
+  // bottom bar mini meters
+  const bottomCats = ['body','touch','gaze','voice','surrender'];
+  const maxBot = Math.max(...bottomCats.map(c => dataCounters[c]), 1);
+  bottomCats.forEach(c => {
+    const v = dataCounters[c];
+    const pct = Math.round((v / maxBot) * 100);
+    const barEl = document.getElementById('dmr-' + c);
+    const valEl = document.getElementById('dmrv-' + c);
+    if (barEl) barEl.style.width = pct + '%';
+    if (valEl) valEl.textContent = v;
+  });
+  // total data points in bottom bar
+  const totalEl = document.getElementById('data-total-val');
+  if (totalEl) totalEl.textContent = totalDataPts + ' pts';
+
+
+  // session duration
+  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  const mm = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss = String(elapsed % 60).padStart(2,'0');
+  document.getElementById('log-sum-txt').textContent = `SESSION DURATION: ${mm}:${ss}`;
+}
+
+// Update duration every second
+setInterval(() => {
+  if (logEntries.length === 0) return;
+  const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+  const mm = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss = String(elapsed % 60).padStart(2,'0');
+  const el = document.getElementById('log-sum-txt');
+  if (el) el.textContent = `SESSION DURATION: ${mm}:${ss}`;
+}, 1000);
+
+function toggleLog() {
+  logOpen = !logOpen;
+  document.getElementById('log-panel').classList.toggle('open', logOpen);
+  document.getElementById('log-toggle-btn').style.right = logOpen ? '394px' : '14px';
+}
+
+function clearLog() {
+  logEntries.length = 0;
+  entryCount = 0;
+  totalComplianceScore = 0;
+  Object.keys(dataCounters).forEach(k => dataCounters[k] = 0);
+  document.getElementById('log-feed').innerHTML = '';
+  updateLogStats();
+  document.getElementById('log-total').textContent = '0';
+  document.getElementById('log-datapts').textContent = '0';
+  document.getElementById('log-score').textContent = '—';
+  document.getElementById('log-badge').textContent = '0';
+  document.getElementById('compliance-fill').style.width = '0%';
+  document.getElementById('lc-grade').textContent = 'INITIALIZING';
+}
+
+function exportLog() {
+  const lines = [`HUMANAFTERALL.EXE — SESSION LOG`, `Exported: ${new Date().toLocaleString('de-AT')}`, `─`.repeat(60), ``];
+  const totalDataPts = Object.values(dataCounters).reduce((a,b)=>a+b,0);
+  const avgScore = entryCount > 0 ? Math.round(totalComplianceScore/entryCount) : 0;
+  lines.push(`TOTAL COMMANDS: ${logEntries.length}`);
+  lines.push(`AVG COMPLIANCE SCORE: ${avgScore}%`);
+  lines.push(`TOTAL DATA POINTS EXTRACTED: ${totalDataPts}`);
+  lines.push(`DATA BREAKDOWN: ${Object.entries(dataCounters).map(([k,v])=>k.toUpperCase()+':'+v).join(' | ')}`);
+  lines.push(`─`.repeat(60));
+  lines.push(`COMMAND HISTORY:`);
+  lines.push(``);
+  [...logEntries].reverse().forEach((e, i) => {
+    lines.push(`[${i+1}] ${e.time} | ${e.role} → ${e.to} | ${e.speedSec}s | ${e.rating.label}`);
+    lines.push(`    CMD: ${e.cmd}`);
+    lines.push(`    STATUS: ${e.phrase}`);
+    lines.push(`    DATA: +${e.dataHarvested}pts (${e.cats.join(', ')})`);
+    lines.push(``);
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `humanafterall_log_${Date.now()}.txt`;
+  a.click();
+}
+
+</script>
+</body>
+</html>
